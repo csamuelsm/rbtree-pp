@@ -1,4 +1,6 @@
 #include <iostream>
+#include <optional>
+#include <iomanip>
 using namespace std;
 
 #define RED 0
@@ -15,9 +17,11 @@ class Node {
         Node* p; // parent
         unsigned short color : 1;
 
-        Node(int key) {
+        Node(const std::optional<int>& key) {
             this->color = RED;
-            this->key = key;
+            if (key.has_value()) {
+                this->key = key.value();
+            }
             this->left = NULL;
             this->right = NULL;
             this->p = NULL;
@@ -27,25 +31,37 @@ class Node {
 class RBTree {
     public:
         Node* root;
+        Node* nil;
         void leftRotate(Node* x);
         void rightRotate(Node* y);
-        int insert(Node* z); 
+        int insert(int k); 
         void rbInsertFixup(Node* z);
         Node* findNodeUncle(Node* z, unsigned short dir);
-        void print(Node* p, int indent);
+        void print(Node* p, int i);
+
+        RBTree() {
+            Node* sent = new Node(NULL); // creating the sentinel
+            sent->color = BLACK; // making it black
+            sent->p = sent; // making the sentinel be its own father
+            sent->left = sent;
+            sent->right = sent;
+
+            this->nil = sent; // the tree's root is the sentinel
+            this->root = sent;
+        }
 };
 
 void RBTree::leftRotate(Node* x) {
     Node* y = x->right; // set y
     x->right = y->left; // turn y's left subtree into x's right subtree
     
-    if (y->left != NULL) {
+    if (y->left != this->nil) {
         y->left->p = x;
     }
 
     y->p = x->p; // link x's parent to y
 
-    if (x->p == NULL) {
+    if (x->p == this->nil) {
         this->root = y;
     } else if (x == x->p->left) {
         x->p->left = y;
@@ -61,13 +77,13 @@ void RBTree::rightRotate(Node* y) {
     Node* x = y->left; // set x
     y->left = x->right; // turn x's right subtree into y's left subtree
 
-    if (x->right != NULL) {
+    if (x->right != this->nil) {
         x->right->p = y;
     }
 
     x->p = y->p; // link y's parent to x
 
-    if (y->p == NULL) {
+    if (y->p == this->nil) {
         this->root = x;
     } else if (y == y->p->right) {
         y->p->right = x;
@@ -79,11 +95,12 @@ void RBTree::rightRotate(Node* y) {
     y->p = x;
 }
 
-int RBTree::insert(Node* z) {
-    Node* y = NULL;
+int RBTree::insert(int k) {
+    Node* z = new Node(k);
+    Node* y = this->nil;
     Node* x = this->root;
 
-    while (x != NULL) {
+    while (x != this->nil) {
         y = x;
         if (z->key < x->key) {
             x = x->left;
@@ -94,48 +111,37 @@ int RBTree::insert(Node* z) {
 
     z->p = y;
 
-    if (y == NULL) {
+    if (y == this->nil) {
         this->root = z;
+        this->nil->p = z;
+        //this->nil->left = this->root;
     } else if (z->key < y->key) {
         y->left = z;
     } else {
         y->right = z;
     }
 
-    z->left = NULL;
-    z->right = NULL;
+    z->left = this->nil;
+    z->right = this->nil;
     z->color = RED;
 
+    //cout << "iniciando o fixup" << endl;
     this->rbInsertFixup(z);
+    //cout << "concluido o fixup" << endl;
 
     return z->key;
 }
 
-Node* RBTree::findNodeUncle(Node* z, unsigned short dir) {
-    if (z == NULL) return NULL;
-
-    if (z->p == NULL) return NULL;
-
-    if (z->p->p == NULL) return NULL;
-
-    if (dir == LEFT) {
-        return z->p->p->left;
-    } else {
-        return z->p->p->left;
-    }
-}
-
 void RBTree::rbInsertFixup(Node* z) {
-    if (z->p == NULL) {
-        z->color = BLACK;
-        return;
-    }
+    //cout << "entrando no fixup" << endl;
     while (z->p->color == RED) {
-        //if (z->p == z->p->p->left) {
-        if (findNodeUncle(z, LEFT) != NULL && z->p == findNodeUncle(z, LEFT)) {
-            Node* y = findNodeUncle(z, RIGHT);
+        //cout << "Entrou no While" << endl;
+        if (z->p == z->p->p->left) {
+            //cout << "Entrou no if" << endl;
+            Node* y = z->p->p->right;
 
             if (y->color == RED) {
+                //cout << "chegou ate aqui - 1" << endl;
                 // case 1: z's uncle is red
                 z->p->color = BLACK;
                 y->color = BLACK;
@@ -156,40 +162,54 @@ void RBTree::rbInsertFixup(Node* z) {
 
             }
         
-        } else if (findNodeUncle(z, RIGHT) != NULL) {
+        } else {
+            //cout << "Entrou no else" << endl;
             // same as "if" clause with "left" and "right" exchanged
-            Node* y = findNodeUncle(z, LEFT);
+            Node* y = z->p->p->left;
+
+            //cout << (y == NULL ? "NULL" : "NOT NULL") << endl;
 
             if (y->color == RED) {
+                //cout << "chegou ate aqui - 2" << endl;
                 // case 1: z's uncle is red
                 z->p->color = BLACK;
                 y->color = BLACK;
                 z->p->p->color = RED;
                 z = z->p->p;
+                //cout << "chegou ate aqui - 3" << endl;
             } else { 
+                
                 // cases 2 and 3: z's uncle is black
-                if (z == z->p->right) {
+                if (z == z->p->left) {
+                    cout << "Entrou no rightRotate" << endl;
                     // case 2: z is a right child
                     z = z->p;
-                    this->leftRotate(z);
+                    this->rightRotate(z);
                 }
 
                 // case 3: z is a left child
                 z->p->color = BLACK;
                 z->p->p->color = RED;
-                this->rightRotate(z->p->p);
+                this->leftRotate(z->p->p);
 
             }
         }
     
     }
+    this->root->color = BLACK;
 }
 
-void RBTree::print(Node* p, int indent) {
-    if (p != NULL) {
-        cout << p->key << endl;
-        if (p->left != NULL) this->print(p->left, indent+4);
-        if (p->right != NULL) this->print(p->right, indent+4);
+void RBTree::print(Node* p, int i) {
+    if (p != this->nil) {
+        if (p->left != this->nil) {
+            this->print(p->left, i+1);
+        }
+
+        cout << (p->color == BLACK ? "(B) " : "(R) ") << p->key << ", " << i << " ";
+
+        if (p->right != this->nil) {
+            this->print(p->right, i+1);
+        }
     }
 }
 
@@ -198,16 +218,20 @@ int main() {
 
     cout << "Tudo certo!" << endl;
 
-    Node* node = new Node(1);
-    rbtree.insert(node);
+    rbtree.insert(1);
+    rbtree.insert(17);
+    rbtree.insert(6);
+    rbtree.insert(18);
+    rbtree.insert(20);
+    rbtree.insert(4);
+    rbtree.insert(27);
+    rbtree.insert(24);
+    rbtree.insert(5);
+    rbtree.insert(69);
+    rbtree.insert(8);
 
-    Node* node2 = new Node(17);
-    rbtree.insert(node2);
-
-    Node* node3 = new Node(6);
-    rbtree.insert(node3);
-
-    rbtree.print(rbtree.root, 4);
+    rbtree.print(rbtree.root, 0);
+    cout << endl;
 
     return 0;
 }
