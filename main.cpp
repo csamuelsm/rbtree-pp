@@ -37,7 +37,7 @@ class RBTree {
         int insert(int k); 
         void rbInsertFixup(Node* z);
         Node* findNodeUncle(Node* z, unsigned short dir);
-        void print(Node* p, int i);
+        void print(const string &prefix, Node *p, bool isLeft, bool isRoot);
 
         RBTree() {
             Node* sent = new Node(NULL); // creating the sentinel
@@ -199,6 +199,26 @@ void RBTree::rbInsertFixup(Node* z) {
     this->root->color = BLACK;
 }
 
+void RBTree::print(const string &prefix, Node* p, bool isLeft, bool isRoot) {
+    if (p != this->nil) {
+        if (isRoot) {
+            cout << "─────";
+        } else {
+            cout << prefix << (isLeft ? "L├────" : "R└───");
+        }
+
+        cout << (p->color == BLACK ? "(B) " : "(R) ") << p->key << endl;
+
+        if (p->left != this->nil) {
+            this->print(prefix + (isLeft ? " │   " : "    "), p->left, true, false);
+        }
+        if (p->right != this->nil) {
+            this->print(prefix + (isLeft ? " │   " : "    "), p->right,false, false);
+        }
+    }
+}
+
+/*
 void RBTree::print(Node* p, int i) {
     if (p != this->nil) {
         if (p->left != this->nil) {
@@ -212,6 +232,7 @@ void RBTree::print(Node* p, int i) {
         }
     }
 }
+*/
 
 int main() {
     RBTree rbtree = RBTree();
@@ -230,7 +251,7 @@ int main() {
     rbtree.insert(69);
     rbtree.insert(8);
 
-    rbtree.print(rbtree.root, 0);
+    rbtree.print("", rbtree.root, false, true);
     cout << endl;
 
     return 0;
