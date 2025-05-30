@@ -1,6 +1,9 @@
 #include <iostream>
 #include <optional>
 #include <iomanip>
+#include <set>
+#include <random>
+#include <ctime>
 using namespace std;
 
 #define RED 0
@@ -45,6 +48,8 @@ class RBTree {
 
         Node* treeMinimum(Node* z);
         Node* find(int k);
+        void gerarChaves(int k);
+
 
         RBTree() {
             Node* sent = new Node(NULL); // creating the sentinel
@@ -214,7 +219,7 @@ void RBTree::print(const string &prefix, Node* p, bool isLeft, bool isRoot) {
             cout << prefix << (isLeft ? "L├────" : "R└───");
         }
 
-        cout << (p->color == BLACK ? "(B) " : "(R) ") << p->key << endl;
+        cout << p->key << (p->color == BLACK ? "(B) " : "(R) ") << endl;
 
         if (p->left != this->nil) {
             this->print(prefix + (isLeft ? " │   " : "    "), p->left, true, false);
@@ -376,6 +381,21 @@ Node* RBTree::find(int k) {
     return y;
 }
 
+void RBTree::gerarChaves(int valores){
+    srand(time(0));
+
+    // Criar um conjunto para armazenar os valores aleatórios
+    set<int> valoresAleatorios;
+
+    // Gerar os valores aleatórios e inseri-los no conjunto
+    while (valoresAleatorios.size() < valores) {
+        int valorAleatorio = rand() % 100;  // Gera um valor entre 0 e 99 (ou outro intervalo desejado)
+        if (valoresAleatorios.insert(valorAleatorio).second == true){
+            this->insert(valorAleatorio);
+        };
+    }
+}
+
 int main() {
     RBTree rbtree = RBTree();
 
@@ -393,12 +413,14 @@ int main() {
     rbtree.insert(69);
     rbtree.insert(8);
 
+    //rbtree.gerarChaves(20);
+
     rbtree.print("", rbtree.root, false, true);
     cout << endl;
 
     //Node* f = rbtree.find(20);
     
-    rbtree.rbDelete(20);
+    rbtree.rbDelete(4);
     rbtree.print("", rbtree.root, false, true);
     cout << endl;
 
