@@ -384,13 +384,17 @@ Node* RBTree::find(int k) {
 
 Node* RBTree::successor(int k) {
     Node* z = this->find(k);
-    if (z == NULL) {
+    if (z == NULL || z == this->nil) {
         // TO-DO: Fazer o código para achar o sucessor de um elemento quando o elemento não está na árvore
         return NULL;
     }
 
-    return this->treeMinimum(z->right);
+    Node* y = z->right;
+    while (y->left != this->nil) {
+        y = y->left;
+    }
 
+    return y;
 }
 
 void RBTree::gerarChaves(int valores){
@@ -430,9 +434,9 @@ int main() {
     rbtree.print("", rbtree.root, false, true);
     cout << endl;
 
-    Node* f = rbtree.find(6);
-    Node* g = rbtree.treeMinimum(f);
-    cout << "Sucessor de 6: " << f->right->key << endl;
+    //Node* f = rbtree.find(6);
+    Node* g = rbtree.successor(6);
+    cout << "Sucessor de 6: " << g->key << endl;
     
     rbtree.rbDelete(4);
     rbtree.print("", rbtree.root, false, true);
