@@ -384,6 +384,9 @@ Node* RBTree::find(int k) {
 
 Node* RBTree::successor(int k) {
     Node* z = this->find(k);
+
+    // TO-DO: Fazer o resto do sucessor
+
     if (z == NULL || z == this->nil) {
         // TO-DO: Fazer o código para achar o sucessor de um elemento quando o elemento não está na árvore
         return NULL;
