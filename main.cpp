@@ -45,6 +45,7 @@ class RBTree {
 
         Node* treeMinimum(Node* z);
         Node* find(int k);
+        Node* successor(int k);
 
         RBTree() {
             Node* sent = new Node(NULL); // creating the sentinel
@@ -376,6 +377,16 @@ Node* RBTree::find(int k) {
     return y;
 }
 
+Node* RBTree::successor(int k) {
+    Node* z = this->find(k);
+    if (z == NULL) {
+        // TO-DO: Fazer o código para achar o sucessor de um elemento quando o elemento não está na árvore
+        return NULL;
+    }
+
+    return this->treeMinimum(z->right);
+}
+
 int main() {
     RBTree rbtree = RBTree();
 
@@ -396,7 +407,9 @@ int main() {
     rbtree.print("", rbtree.root, false, true);
     cout << endl;
 
-    //Node* f = rbtree.find(20);
+    Node* f = rbtree.find(6);
+    Node* g = rbtree.treeMinimum(f);
+    cout << "Sucessor de 6: " << f->right->key << endl;
     
     rbtree.rbDelete(20);
     rbtree.print("", rbtree.root, false, true);
