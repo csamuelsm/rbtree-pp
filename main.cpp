@@ -32,12 +32,19 @@ class RBTree {
     public:
         Node* root;
         Node* nil;
+
         void leftRotate(Node* x);
         void rightRotate(Node* y);
         int insert(int k); 
         void rbInsertFixup(Node* z);
-        Node* findNodeUncle(Node* z, unsigned short dir);
+        //Node* findNodeUncle(Node* z, unsigned short dir);
         void print(const string &prefix, Node *p, bool isLeft, bool isRoot);
+        void rbTransplant(Node* u, Node* v); 
+        void rbDelete(int k);
+        void rbDeleteFixup(Node* x);
+
+        Node* treeMinimum(Node* z);
+        Node* find(int k);
 
         RBTree() {
             Node* sent = new Node(NULL); // creating the sentinel
@@ -218,21 +225,156 @@ void RBTree::print(const string &prefix, Node* p, bool isLeft, bool isRoot) {
     }
 }
 
-/*
-void RBTree::print(Node* p, int i) {
-    if (p != this->nil) {
-        if (p->left != this->nil) {
-            this->print(p->left, i+1);
+void RBTree::rbTransplant(Node* u, Node* v) {
+    if (u->p == this->nil) {
+        this->root = v;
+    } else if (u == u->p->left) {
+        u->p->left = v;
+    } else {
+        u->p->right = v;
+    }
+    v->p = u->p;
+} 
+
+Node* RBTree::treeMinimum(Node* z) {
+    // Return the smallest node in the subtree rooted at z
+    Node* y = z;
+    while (y->left != this->nil) {
+        y = y->left;
+    }
+    return y;
+}
+
+void RBTree::rbDelete(int k) {
+    Node* z = this->find(k);
+    if (z == NULL) {
+        return;
+    }
+
+    Node* y = z;
+    unsigned short y_original_color = y->color;
+
+    Node* x;
+
+    if (z->left == this->nil) {
+        x = z->right;
+        this->rbTransplant(z, z->right);
+    } else if (z->right == this->nil) {
+        x = z->left;
+        this->rbTransplant(z, z->left);
+    } else {
+        y = this->treeMinimum(z->right);
+        y_original_color = y->color;
+        
+        x = y->right;
+
+        if (y->p == z) {
+            x->p = y;
+        } else {
+            this->rbTransplant(y, y->right);
+            y->right = z->right;
+            y->right->p = y;
         }
 
-        cout << (p->color == BLACK ? "(B) " : "(R) ") << p->key << ", " << i << " ";
+        this->rbTransplant(z, y);
+        y->left = z->left;
+        y->left->p = y;
+        y->color = z->color;
+    }
 
-        if (p->right != this->nil) {
-            this->print(p->right, i+1);
-        }
+    if (y_original_color == BLACK) {
+        this->rbDeleteFixup(x);
     }
 }
-*/
+
+void RBTree::rbDeleteFixup(Node* x) {
+    while (x != this->root && x->color == BLACK) {
+        if (x == x->p->left) {
+            Node* w = x->p->right;
+
+            if (w->color == RED) {
+                // case 1
+                w->color = BLACK;
+                x->p->color = RED;
+                this->leftRotate(x->p);
+                w = x->p->right; 
+            }
+
+            if (w->left->color == BLACK && w->right->color == BLACK) {
+                // case 2
+                w->color = RED;
+                x = x->p;
+            } else {
+                if (w->right->color == BLACK) {
+                    // case 3
+                    w->left->color = BLACK;
+                    w->color = RED;
+                    this->rightRotate(w);
+                    w = x->p->right;
+                }
+
+                // case 4
+                w->color = x->p->color;
+                x->p->color = BLACK;
+                w->right->color = BLACK;
+                this->leftRotate(x->p);
+                x = this->root;
+            }
+        } else {
+            Node* w = x->p->left;
+
+            if (w->color == RED) {
+                // case 1
+                w->color = BLACK;
+                x->p->color = RED;
+                this->rightRotate(x->p);
+                w = x->p->left;
+            }
+
+            if (w->right->color == BLACK && w->left->color == BLACK) {
+                // case 2
+                w->color = RED;
+                x = x->p;
+            } else {
+                if (w->left->color == BLACK) {
+                    // case 3
+                    w->right->color = BLACK;
+                    w->color = RED;
+                    this->leftRotate(w);
+                    w = x->p->left;
+                }
+
+                // case 4
+                w->color = x->p->color;
+                x->p->color = BLACK;
+                w->left->color = BLACK;
+                this->rightRotate(x->p);
+                x = this->root;
+            }
+        }
+    }
+    x->color = BLACK;
+}
+
+Node* RBTree::find(int k) {
+    Node* y = this->root;
+
+    while (y != this->nil) {
+        if (y->key == k) {
+            return y;
+        } else if (k < y->key) {
+            y = y->left;
+        } else {
+            y = y->right;
+        }
+    }
+
+    if (y==this->nil) {
+        return NULL;
+    }
+
+    return y;
+}
 
 int main() {
     RBTree rbtree = RBTree();
@@ -251,6 +393,12 @@ int main() {
     rbtree.insert(69);
     rbtree.insert(8);
 
+    rbtree.print("", rbtree.root, false, true);
+    cout << endl;
+
+    //Node* f = rbtree.find(20);
+    
+    rbtree.rbDelete(20);
     rbtree.print("", rbtree.root, false, true);
     cout << endl;
 
