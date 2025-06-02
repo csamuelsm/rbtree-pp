@@ -23,6 +23,9 @@ class Node {
         unsigned short child;
         int version;
 
+        Node* get_left(int v);
+        Node* get_right(int v);
+
         Node(const std::optional<int>& key) {
             this->color = RED;
             if (key.has_value()) {
@@ -31,8 +34,29 @@ class Node {
             this->left = NULL;
             this->right = NULL;
             this->p = NULL;
+            this->mod = NULL;
         }
 };
+
+Node* Node::get_left(int v){
+    Node* ret = this->left;
+    if (this->mod != NULL) {
+        if(this->child == LEFT && this->version <= v){
+            ret = this->mod;
+        }
+    }
+    return ret;
+}
+
+Node* Node::get_right(int v){
+    Node* ret = this->right;
+    if (this->mod != NULL) {
+        if(this->child == RIGHT && this->version <= v){
+            ret = this->mod;
+        }
+    }
+    return ret;
+}
 
 class RBTree {
     public:
@@ -133,11 +157,17 @@ int RBTree::insert(int k) {
         this->root[this->version] = z;
         this->nil->p = z;
         //this->nil->left = this->root;
-    } else if (z->key < y->key) {
-        y->left = z;
     } else {
-        y->right = z;
-    }
+        //y->mod = z;
+        //y->version = this->version + 1;
+        if (z->key < y->key) {
+            y->left = z;
+            //y->child = LEFT;
+        } else {
+            y->right = z;
+            //y->child = RIGHT;
+        } 
+    }    
 
     z->left = this->nil;
     z->right = this->nil;
