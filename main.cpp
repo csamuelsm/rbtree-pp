@@ -19,6 +19,9 @@ class Node {
         Node* right; 
         Node* p; // parent
         unsigned short color : 1;
+        Node* mod;
+        unsigned short child;
+        int version;
 
         Node(const std::optional<int>& key) {
             this->color = RED;
@@ -33,8 +36,9 @@ class Node {
 
 class RBTree {
     public:
-        Node* root;
+        Node* root[100];
         Node* nil;
+        int version;
 
         void leftRotate(Node* x);
         void rightRotate(Node* y);
@@ -47,8 +51,8 @@ class RBTree {
         void rbDeleteFixup(Node* x);
 
         Node* treeMinimum(Node* z);
-        Node* find(int k);
-        Node* successor(int k);
+        Node* find(int k, int v);
+        Node* successor(int k, int v);
         void gerarChaves(int k);
 
 
@@ -60,7 +64,8 @@ class RBTree {
             sent->right = sent;
 
             this->nil = sent; // the tree's root is the sentinel
-            this->root = sent;
+            this->root[0] = sent;
+            this->version = 0;
         }
 };
 
@@ -75,7 +80,7 @@ void RBTree::leftRotate(Node* x) {
     y->p = x->p; // link x's parent to y
 
     if (x->p == this->nil) {
-        this->root = y;
+        this->root[this->version] = y;
     } else if (x == x->p->left) {
         x->p->left = y;
     } else {
@@ -97,7 +102,7 @@ void RBTree::rightRotate(Node* y) {
     x->p = y->p; // link y's parent to x
 
     if (y->p == this->nil) {
-        this->root = x;
+        this->root[this->version] = x;
     } else if (y == y->p->right) {
         y->p->right = x;
     } else {
@@ -111,7 +116,7 @@ void RBTree::rightRotate(Node* y) {
 int RBTree::insert(int k) {
     Node* z = new Node(k);
     Node* y = this->nil;
-    Node* x = this->root;
+    Node* x = this->root[this->version];
 
     while (x != this->nil) {
         y = x;
@@ -125,7 +130,7 @@ int RBTree::insert(int k) {
     z->p = y;
 
     if (y == this->nil) {
-        this->root = z;
+        this->root[this->version] = z;
         this->nil->p = z;
         //this->nil->left = this->root;
     } else if (z->key < y->key) {
@@ -142,6 +147,8 @@ int RBTree::insert(int k) {
     this->rbInsertFixup(z);
     //cout << "concluido o fixup" << endl;
 
+    this->print("", this->root[this->version], false, true);
+    cout << endl;
     return z->key;
 }
 
@@ -209,7 +216,7 @@ void RBTree::rbInsertFixup(Node* z) {
         }
     
     }
-    this->root->color = BLACK;
+    this->root[this->version]->color = BLACK;
 }
 
 void RBTree::print(const string &prefix, Node* p, bool isLeft, bool isRoot) {
@@ -233,7 +240,7 @@ void RBTree::print(const string &prefix, Node* p, bool isLeft, bool isRoot) {
 
 void RBTree::rbTransplant(Node* u, Node* v) {
     if (u->p == this->nil) {
-        this->root = v;
+        this->root[this->version] = v;
     } else if (u == u->p->left) {
         u->p->left = v;
     } else {
@@ -252,7 +259,7 @@ Node* RBTree::treeMinimum(Node* z) {
 }
 
 void RBTree::rbDelete(int k) {
-    Node* z = this->find(k);
+    Node* z = this->find(k, this->version);
     if (z == NULL) {
         return;
     }
@@ -294,7 +301,7 @@ void RBTree::rbDelete(int k) {
 }
 
 void RBTree::rbDeleteFixup(Node* x) {
-    while (x != this->root && x->color == BLACK) {
+    while (x != this->root[this->version] && x->color == BLACK) {
         if (x == x->p->left) {
             Node* w = x->p->right;
 
@@ -324,7 +331,7 @@ void RBTree::rbDeleteFixup(Node* x) {
                 x->p->color = BLACK;
                 w->right->color = BLACK;
                 this->leftRotate(x->p);
-                x = this->root;
+                x = this->root[this->version];
             }
         } else {
             Node* w = x->p->left;
@@ -355,15 +362,15 @@ void RBTree::rbDeleteFixup(Node* x) {
                 x->p->color = BLACK;
                 w->left->color = BLACK;
                 this->rightRotate(x->p);
-                x = this->root;
+                x = this->root[this->version];
             }
         }
     }
     x->color = BLACK;
 }
 
-Node* RBTree::find(int k) {
-    Node* y = this->root;
+Node* RBTree::find(int k, int v) {
+    Node* y = this->root[v];
 
     while (y != this->nil) {
         if (y->key == k) {
@@ -382,8 +389,8 @@ Node* RBTree::find(int k) {
     return y;
 }
 
-Node* RBTree::successor(int k) {
-    Node* x = this->find(k);
+Node* RBTree::successor(int k, int v) {
+    Node* x = this->find(k, v);
 
     if (x->right != this->nil) {
         return this->treeMinimum(x->right);
@@ -431,17 +438,17 @@ int main() {
 
     //rbtree.gerarChaves(20);
 
-    rbtree.print("", rbtree.root, false, true);
-    cout << endl;
+    //rbtree.print("", rbtree.root[rbtree.version], false, true);
+    //cout << endl;
     
     rbtree.rbDelete(4);
-    rbtree.print("", rbtree.root, false, true);
+    rbtree.print("", rbtree.root[rbtree.version], false, true);
     cout << endl;
 
-    Node* g = rbtree.successor(6);
+    Node* g = rbtree.successor(6, 0);
     cout << "Sucessor de 6: " << g->key << endl;
 
-    Node* h = rbtree.successor(1);
+    Node* h = rbtree.successor(1, 0);
     cout << "Sucessor de 1: " << h->key << endl;
 
     return 0;
