@@ -12,6 +12,9 @@ using namespace std;
 #define LEFT 0
 #define RIGHT 1
 
+#define QTD_VERSIONS 100
+#define QTD_MODS 6
+
 class Node {
     public:
         int key;
@@ -99,22 +102,23 @@ Node* Node::set_right(Node* c, Node* nil, int v){
 
 Node* Node::duplicate(Node* nil, int v){
 
-    //cout << "Duplicating node with key " << this->key << " v" << this->version << endl;
+    cout << "Duplicating node with key " << this->key << " v" << this->version << endl;
 
     //cout << "Antes da duplicação" << endl;
     //cout << "Pai do nó duplicado: " << this->p->key << " v" << this->p->version << endl;
     //cout << "Filho esquerdo do nó duplicado: " << this->get_left(v)->key << " v" << this->get_left(v)->version << endl;
     //cout << "Filho direito do nó duplicado: " << this->get_right(v)->key << " v" << this->get_right(v)->version << endl;
+    //cout << "pai do Filho direito do nó duplicado: " << ditto->get_right(v)->p->key << " v" << ditto->get_right(v)->p->version << endl;
 
     Node* ditto = new Node(this->key, v);
     ditto->left = this->get_left(v);
-    if (this->left != nil) this->get_left(v)->p = ditto;
+    if (ditto->left != nil) ditto->get_left(v)->p = ditto;
     ditto->right = this->get_right(v);
-    if (this->right != nil) this->get_right(v)->p = ditto;
+    if (ditto->right != nil) ditto->get_right(v)->p = ditto;
     ditto->color = this->color;
     ditto->p = this->p;
     if (ditto->p != nil){
-        if (ditto == ditto->p->get_left(v)){
+        if (this == this->p->get_left(v)){
             ditto->p = ditto->p->set_left(ditto, nil, v);
         } else {
             ditto->p = ditto->p->set_right(ditto, nil, v);
@@ -122,20 +126,20 @@ Node* Node::duplicate(Node* nil, int v){
     } else { 
         //cout << "A raiz da árvore da versão " << this->version << " foi duplicada!" << endl;
         nil->p = ditto;
-        //rbtree->root[v] = ditto;
     }
 
     //cout << "Depois da duplicação (nó com chave " << ditto->key << " v" << ditto->version << ")" << endl;
     //cout << "Pai do nó duplicado: " << ditto->p->key << " v" << ditto->p->version << endl;
     //cout << "Filho esquerdo do nó duplicado: " << ditto->get_left(v)->key << " v" << ditto->get_left(v)->version << endl;
     //cout << "Filho direito do nó duplicado: " << ditto->get_right(v)->key << " v" << ditto->get_right(v)->version << endl;
+    //cout << "pai do Filho direito do nó duplicado: " << ditto->get_right(v)->p->key << " v" << ditto->get_right(v)->p->version << endl;
 
     return ditto;
 }
 
 class RBTree {
     public:
-        Node* root[100];
+        Node* root[QTD_VERSIONS];
         Node* nil;
         int current_version;
 
@@ -226,12 +230,12 @@ Node* RBTree::rightRotate(Node* y) {
 int RBTree::insert(int k) {
     this->root[this->current_version+1] = this->root[this->current_version];
     this->current_version++;
-    //Node* o = this->nil->p;
-    //cout << "Inserindo nó com chave " << k << " na versão " << this->current_version << endl;
+    cout << "Inserindo nó com chave " << k << " na versão " << this->current_version << endl;
     Node* z = new Node(k, this->current_version);
     Node* y = this->nil;
     Node* x = this->root[this->current_version];
 
+    //cout << "x: " << x->key << endl;
     while (x != this->nil) {
         y = x;
         if (z->key < x->key) {
@@ -239,10 +243,12 @@ int RBTree::insert(int k) {
         } else {
             x = x->get_right(this->current_version);
         }
+        //cout << "x: " << x->key << endl;
     }
 
     z->p = y;
 
+    //cout << "y: " << y->key << " v" << y->version << endl;
     if (y == this->nil) {
         this->root[this->current_version] = z;
         this->nil->p = z;
@@ -252,6 +258,8 @@ int RBTree::insert(int k) {
             //y->child = LEFT;
         } else {
             y = y->set_right(z, this->nil, this->current_version);
+            //cout << "y: " << y->key << " v" << y->version << endl;
+            //cout << "y: " << y->get_right(this->current_version)->key << " v" << y->get_right(this->current_version)->version << endl;
             //y->child = RIGHT;
         } 
     }    
@@ -263,16 +271,17 @@ int RBTree::insert(int k) {
     //cout << "iniciando o fixup" << endl;
     this->rbInsertFixup(z);
     //cout << "concluido o fixup" << endl;
-    //if (this->nil->p != o){
-    //    
-    //}
-    //cout << "Antigo pai do nil " << this->nil->p->key << " v" << this->nil->p->version << endl;
-    if (this->root[this->current_version]->version == this->current_version){
-        this->nil->p = this->root[this->current_version];
-    } else {
+
+    cout << "Antigo pai do nil " << this->nil->p->key << " v" << this->nil->p->version << endl;
+    cout << "Antiga raiz da árvore " << this->root[this->current_version]->key << " v" << this->root[this->current_version]->version << endl;
+    if (this->root[this->current_version]->key == this->nil->p->key){
         this->root[this->current_version] = this->nil->p;
+    } else {
+        this->nil->p = this->root[this->current_version];
     }
-    //cout << "Pai do nil: " << this->nil->p->key << " v" << this->nil->p->version << endl;
+    cout << "Pai do nil: " << this->nil->p->key << " v" << this->nil->p->version << endl;
+    cout << "Raiz da árvore " << this->root[this->current_version]->key << " v" << this->root[this->current_version]->version << endl;
+
     cout << "Versão " << this->current_version << " da árvore" << endl;
     this->print("", this->root[this->current_version], this->current_version, false, true);
     cout << endl;
@@ -281,6 +290,7 @@ int RBTree::insert(int k) {
 
 void RBTree::rbInsertFixup(Node* z) {
     //cout << "entrando no fixup" << endl;
+    //cout << "z: " << z->key << " v" << z->version << endl;
     while (z->p->color == RED) {
         //cout << "Entrou no While" << endl;
         if (z->p == z->p->p->get_left(this->current_version)) {
@@ -297,7 +307,7 @@ void RBTree::rbInsertFixup(Node* z) {
             } else { 
                 // cases 2 and 3: z's uncle is black
                 if (z == z->p->get_right(this->current_version)) {
-                    cout << "Entrou no leftRotate" << endl;
+                    //cout << "Entrou no leftRotate" << endl;
                     // case 2: z is a right child
                     z = z->p;
                     z = this->leftRotate(z);
@@ -314,6 +324,9 @@ void RBTree::rbInsertFixup(Node* z) {
             //cout << "Entrou no else" << endl;
             // same as "if" clause with "left" and "right" exchanged
             Node* y = z->p->p->get_left(this->current_version);
+            Node* a = z->p->p;
+            //cout << "a: " << a->key << " v" << a->version << endl;
+            //cout << "y: " << y->key << " v" << y->version << endl;
 
             //cout << (y == NULL ? "NULL" : "NOT NULL") << endl;
 
@@ -329,7 +342,7 @@ void RBTree::rbInsertFixup(Node* z) {
                 
                 // cases 2 and 3: z's uncle is black
                 if (z == z->p->get_left(this->current_version)) {
-                    cout << "Entrou no rightRotate" << endl;
+                    //cout << "Entrou no rightRotate" << endl;
                     // case 2: z is a right child
                     z = z->p;
                     z = this->rightRotate(z);
@@ -339,10 +352,9 @@ void RBTree::rbInsertFixup(Node* z) {
                 z->p->color = BLACK;
                 z->p->p->color = RED;
                 this->leftRotate(z->p->p);
-                //
             }
         }
-
+        this->print("", this->root[this->current_version], this->current_version, false, true);
     }
     this->root[this->current_version]->color = BLACK;
 }
@@ -430,6 +442,12 @@ void RBTree::rbDelete(int k) {
         }
     }
 
+    if (this->root[this->current_version]->key == this->nil->p->key){
+        this->root[this->current_version] = this->nil->p;
+    } else {
+        this->nil->p = this->root[this->current_version];
+    }
+    
     cout << "Versão " << this->current_version << " da árvore" << endl;
     this->print("", this->root[this->current_version], this->current_version, false, true);
     cout << endl;
@@ -560,25 +578,41 @@ int main() {
 
     cout << "Tudo certo!" << endl;
 
-    rbtree.insert(1);
+    /* rbtree.insert(1);
     rbtree.insert(17);
-    /*
-    Node* a = rbtree.find(17, 2);
-    if (a == NULL) {
-        cout << "não existe chave 17 na árvore versão 2" << endl;
-    } else {
-        cout << "Chave 17, versão 2: " << a->key << endl;
-    }
-    */
     rbtree.insert(6);
-    rbtree.insert(18);
-    rbtree.insert(20);
-    rbtree.insert(4);
-    rbtree.insert(27);
-    rbtree.insert(24);
-    rbtree.insert(5);
-    rbtree.insert(69);
+    rbtree.insert(7);
     rbtree.insert(8);
+    rbtree.insert(14);
+    rbtree.insert(13);
+    rbtree.insert(9);
+    rbtree.insert(10);
+    rbtree.insert(18);
+    rbtree.insert(11);
+    rbtree.insert(2);
+    rbtree.insert(12);
+    rbtree.insert(3);
+    rbtree.insert(5);
+    rbtree.insert(20);
+    rbtree.insert(15);
+    rbtree.insert(16);
+    rbtree.insert(4);
+    rbtree.insert(19);
+ */
+
+    rbtree.insert(1);
+    rbtree.insert(2);
+    rbtree.insert(3);
+    rbtree.insert(4);
+    rbtree.insert(5);
+    rbtree.insert(6);
+    rbtree.insert(7);
+    rbtree.insert(8);
+    rbtree.insert(9);
+    rbtree.insert(10);
+
+    rbtree.rbDelete(4);
+    rbtree.rbDelete(8);
 
     //rbtree.gerarChaves(20);
 
