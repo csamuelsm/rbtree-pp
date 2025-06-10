@@ -533,7 +533,7 @@ int main() {
 
     cout << "Tudo certo!" << endl;
 
-    /* rbtree.insert(1);
+    rbtree.insert(1);
     rbtree.insert(17);
     rbtree.insert(6);
     rbtree.insert(7);
@@ -553,8 +553,8 @@ int main() {
     rbtree.insert(16);
     rbtree.insert(4);
     rbtree.insert(19);
- */
-    rbtree.insert(1);
+
+    /* rbtree.insert(1);
     rbtree.insert(2);
     rbtree.insert(3);
     rbtree.insert(4);
@@ -563,7 +563,7 @@ int main() {
     rbtree.insert(7);
     rbtree.insert(8);
     rbtree.insert(9);
-    rbtree.insert(10);
+    rbtree.insert(10); */
 
     //rbtree.gerarChaves(20);
 
@@ -571,7 +571,7 @@ int main() {
     //cout << endl;
     
     rbtree.rbDelete(4);
-    rbtree.rbDelete(8);
+    //rbtree.rbDelete(8);
 
     Node* g = rbtree.successor(6, rbtree.version);
     cout << "Sucessor de 6: " << g->key << endl;

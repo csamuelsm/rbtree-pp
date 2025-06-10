@@ -23,14 +23,9 @@ class Node {
         Node* p; // parent
         unsigned short color : 1;
         int version;
-
-        struct Mod {
-            int mod_version;
-            unsigned short child;
-            Node* pointer;
-        };
-
-        Mod Mods[QTD_MODS];
+        Node* mod;
+        unsigned short child;
+        int mod_version;
 
         Node* get_left(int v);
         Node* get_right(int v);
@@ -47,32 +42,26 @@ class Node {
             this->right = NULL;
             this->p = NULL;
             this->version = v;
-            for (int i = 0; i < QTD_MODS; i++) {
-                this->Mods[0].pointer = NULL;
-            }
+            this->mod = NULL;
         }
 };
 
 Node* Node::get_left(int v){
     Node* ret = this->left;
-    int i = 0;
-    while (i < QTD_MODS && this->Mods[i].pointer != NULL){
-        if(this->Mods[i].child == LEFT && this->Mods[i].mod_version <= v){
-            ret = this->Mods[i].pointer;
+    if (this->mod != NULL) {
+        if(this->child == LEFT && this->mod_version <= v){
+            ret = this->mod;
         }
-        i++;
     }
     return ret;
 }
 
 Node* Node::get_right(int v){
     Node* ret = this->right;
-    int i = 0;
-    while (i < QTD_MODS && this->Mods[i].pointer != NULL){
-        if(this->Mods[i].child == RIGHT && this->Mods[i].mod_version <= v){
-            ret = this->Mods[i].pointer;
+    if (this->mod != NULL) {
+        if(this->child == RIGHT && this->mod_version <= v){
+            ret = this->mod;
         }
-        i++;
     }
     return ret;
 }
@@ -81,15 +70,10 @@ Node* Node::set_left(Node* c, Node* nil, int v){
     if (this->version == v) {
         this->left = c;
         return this;
-    } 
-    int i = 0;
-    while (i < QTD_MODS && this->Mods[i].pointer != NULL){
-        i++;
-    }
-    if (i < QTD_MODS) {
-        this->Mods[i].mod_version = v;
-        this->Mods[i].child = LEFT;
-        this->Mods[i].pointer = c;
+    } else if (this->mod == NULL) {
+        this->mod = c;
+        this->child = LEFT;
+        this->mod_version = v;
         return this;
     } else {
         Node* ditto = this->duplicate(nil, v);
@@ -103,15 +87,10 @@ Node* Node::set_right(Node* c, Node* nil, int v){
     if (this->version == v) {
         this->right = c;
         return this;
-    } 
-    int i = 0;
-    while (i < QTD_MODS && this->Mods[i].pointer != NULL){
-        i++;
-    }
-    if (i < QTD_MODS) {
-        this->Mods[i].mod_version = v;
-        this->Mods[i].child = RIGHT;
-        this->Mods[i].pointer = c;
+    } else if (this->mod == NULL) {
+        this->mod = c;
+        this->child = RIGHT;
+        this->mod_version = v;
         return this;
     } else {
         Node* ditto = this->duplicate(nil, v);
@@ -375,7 +354,7 @@ void RBTree::rbInsertFixup(Node* z) {
                 this->leftRotate(z->p->p);
             }
         }
-        //this->print("", this->root[this->current_version], this->current_version, false, true);
+        this->print("", this->root[this->current_version], this->current_version, false, true);
     }
     this->root[this->current_version]->color = BLACK;
 }
