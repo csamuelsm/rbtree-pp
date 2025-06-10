@@ -24,18 +24,30 @@ class Node {
         unsigned short color : 1;
         int version;
 
-        struct Mod {
-            int mod_version;
-            unsigned short child;
+        enum Tag{
+            COLOR, LEFT_C, RIGHT_C
+        };
+
+        union Data{
+            unsigned short color;
             Node* pointer;
+        };
+
+        struct Mod {
+            bool full;
+            int mod_version;
+            Tag tag;
+            Data data;
         };
 
         Mod Mods[QTD_MODS];
 
         Node* get_left(int v);
         Node* get_right(int v);
+        unsigned short get_color(int v);
         Node* set_left(Node* c, Node* nil, int v);
         Node* set_right(Node* c, Node* nil, int v);
+        Node* set_color(unsigned short c, Node* nil, int v);
         Node* duplicate(Node* nil, int v);
 
         Node(const std::optional<int>& key, int v) {
@@ -48,7 +60,7 @@ class Node {
             this->p = NULL;
             this->version = v;
             for (int i = 0; i < QTD_MODS; i++) {
-                this->Mods[0].pointer = NULL;
+                this->Mods[0].full = false;
             }
         }
 };
@@ -56,9 +68,9 @@ class Node {
 Node* Node::get_left(int v){
     Node* ret = this->left;
     int i = 0;
-    while (i < QTD_MODS && this->Mods[i].pointer != NULL){
-        if(this->Mods[i].child == LEFT && this->Mods[i].mod_version <= v){
-            ret = this->Mods[i].pointer;
+    while (i < QTD_MODS && this->Mods[i].full != false){
+        if(this->Mods[i].tag == LEFT_C && this->Mods[i].mod_version <= v){
+            ret = this->Mods[i].data.pointer;
         }
         i++;
     }
@@ -68,9 +80,21 @@ Node* Node::get_left(int v){
 Node* Node::get_right(int v){
     Node* ret = this->right;
     int i = 0;
-    while (i < QTD_MODS && this->Mods[i].pointer != NULL){
-        if(this->Mods[i].child == RIGHT && this->Mods[i].mod_version <= v){
-            ret = this->Mods[i].pointer;
+    while (i < QTD_MODS && this->Mods[i].full != false){
+        if(this->Mods[i].tag == RIGHT_C && this->Mods[i].mod_version <= v){
+            ret = this->Mods[i].data.pointer;
+        }
+        i++;
+    }
+    return ret;
+}
+
+unsigned short Node::get_color(int v){
+    unsigned short ret = this->color;
+    int i = 0;
+    while (i < QTD_MODS && this->Mods[i].full != false){
+        if(this->Mods[i].tag == COLOR && this->Mods[i].mod_version <= v){
+            ret = this->Mods[i].data.color;
         }
         i++;
     }
@@ -83,13 +107,14 @@ Node* Node::set_left(Node* c, Node* nil, int v){
         return this;
     } 
     int i = 0;
-    while (i < QTD_MODS && this->Mods[i].pointer != NULL){
+    while (i < QTD_MODS && this->Mods[i].full != false){
         i++;
     }
     if (i < QTD_MODS) {
+        this->Mods[i].full = true;
         this->Mods[i].mod_version = v;
-        this->Mods[i].child = LEFT;
-        this->Mods[i].pointer = c;
+        this->Mods[i].tag = LEFT_C;
+        this->Mods[i].data.pointer = c;
         return this;
     } else {
         Node* ditto = this->duplicate(nil, v);
@@ -105,13 +130,14 @@ Node* Node::set_right(Node* c, Node* nil, int v){
         return this;
     } 
     int i = 0;
-    while (i < QTD_MODS && this->Mods[i].pointer != NULL){
+    while (i < QTD_MODS && this->Mods[i].full != false){
         i++;
     }
     if (i < QTD_MODS) {
+        this->Mods[i].full = true;
         this->Mods[i].mod_version = v;
-        this->Mods[i].child = RIGHT;
-        this->Mods[i].pointer = c;
+        this->Mods[i].tag = RIGHT_C;
+        this->Mods[i].data.pointer = c;
         return this;
     } else {
         Node* ditto = this->duplicate(nil, v);
@@ -121,22 +147,44 @@ Node* Node::set_right(Node* c, Node* nil, int v){
     }
 }
 
+Node* Node::set_color(unsigned short c, Node* nil, int v){
+    if (this->version == v) {
+        this->color = c;
+        return this;
+    } 
+    int i = 0;
+    while (i < QTD_MODS && this->Mods[i].full != false){
+        i++;
+    }
+    if (i < QTD_MODS) {
+        this->Mods[i].full = true;
+        this->Mods[i].mod_version = v;
+        this->Mods[i].tag = COLOR;
+        this->Mods[i].data.color = c;
+        return this;
+    } else {
+        Node* ditto = this->duplicate(nil, v);
+        ditto->color = c;
+        return ditto;
+    }
+}
+
 Node* Node::duplicate(Node* nil, int v){
 
     cout << "Duplicating node with key " << this->key << " v" << this->version << endl;
 
-    //cout << "Antes da duplicação" << endl;
-    //cout << "Pai do nó duplicado: " << this->p->key << " v" << this->p->version << endl;
-    //cout << "Filho esquerdo do nó duplicado: " << this->get_left(v)->key << " v" << this->get_left(v)->version << endl;
-    //cout << "Filho direito do nó duplicado: " << this->get_right(v)->key << " v" << this->get_right(v)->version << endl;
-    //cout << "pai do Filho direito do nó duplicado: " << ditto->get_right(v)->p->key << " v" << ditto->get_right(v)->p->version << endl;
+    /* cout << "Antes da duplicação" << endl;
+    cout << "Pai do nó duplicado: " << this->p->key << " v" << this->p->version << endl;
+    cout << "Filho esquerdo do nó duplicado: " << this->get_left(v)->key << " v" << this->get_left(v)->version << endl;
+    cout << "Filho direito do nó duplicado: " << this->get_right(v)->key << " v" << this->get_right(v)->version << endl;
+    cout << "pai do Filho direito do nó duplicado: " << this->get_right(v)->p->key << " v" << this->get_right(v)->p->version << endl; */
 
     Node* ditto = new Node(this->key, v);
     ditto->left = this->get_left(v);
     if (ditto->left != nil) ditto->get_left(v)->p = ditto;
     ditto->right = this->get_right(v);
     if (ditto->right != nil) ditto->get_right(v)->p = ditto;
-    ditto->color = this->color;
+    ditto->color = this->get_color(v);
     ditto->p = this->p;
     if (ditto->p != nil){
         if (this == this->p->get_left(v)){
@@ -145,15 +193,15 @@ Node* Node::duplicate(Node* nil, int v){
             ditto->p = ditto->p->set_right(ditto, nil, v);
         }
     } else { 
-        //cout << "A raiz da árvore da versão " << this->version << " foi duplicada!" << endl;
+        cout << "A raiz da árvore da versão " << this->version << " foi duplicada!" << endl;
         nil->p = ditto;
     }
 
-    //cout << "Depois da duplicação (nó com chave " << ditto->key << " v" << ditto->version << ")" << endl;
-    //cout << "Pai do nó duplicado: " << ditto->p->key << " v" << ditto->p->version << endl;
-    //cout << "Filho esquerdo do nó duplicado: " << ditto->get_left(v)->key << " v" << ditto->get_left(v)->version << endl;
-    //cout << "Filho direito do nó duplicado: " << ditto->get_right(v)->key << " v" << ditto->get_right(v)->version << endl;
-    //cout << "pai do Filho direito do nó duplicado: " << ditto->get_right(v)->p->key << " v" << ditto->get_right(v)->p->version << endl;
+    /* cout << "Depois da duplicação (nó com chave " << ditto->key << " v" << ditto->version << ")" << endl;
+    cout << "Pai do nó duplicado: " << ditto->p->key << " v" << ditto->p->version << endl;
+    cout << "Filho esquerdo do nó duplicado: " << ditto->get_left(v)->key << " v" << ditto->get_left(v)->version << endl;
+    cout << "Filho direito do nó duplicado: " << ditto->get_right(v)->key << " v" << ditto->get_right(v)->version << endl;
+    cout << "pai do Filho direito do nó duplicado: " << ditto->get_right(v)->p->key << " v" << ditto->get_right(v)->p->version << endl; */
 
     return ditto;
 }
@@ -312,18 +360,18 @@ int RBTree::insert(int k) {
 void RBTree::rbInsertFixup(Node* z) {
     //cout << "entrando no fixup" << endl;
     //cout << "z: " << z->key << " v" << z->version << endl;
-    while (z->p->color == RED) {
+    while (z->p->get_color(this->current_version) == RED) {
         //cout << "Entrou no While" << endl;
         if (z->p == z->p->p->get_left(this->current_version)) {
             //cout << "Entrou no if" << endl;
             Node* y = z->p->p->get_right(this->current_version);
 
-            if (y->color == RED) {
+            if (y->get_color(this->current_version) == RED) {
                 //cout << "chegou ate aqui - 1" << endl;
                 // case 1: z's uncle is red
-                z->p->color = BLACK;
-                y->color = BLACK;
-                z->p->p->color = RED;
+                z->p = z->p->set_color(BLACK, this->nil, this->current_version);
+                y = y->set_color(BLACK, this->nil, this->current_version);
+                z->p->p = z->p->p->set_color(RED, this->nil, this->current_version);
                 z = z->p->p;
             } else { 
                 // cases 2 and 3: z's uncle is black
@@ -335,8 +383,8 @@ void RBTree::rbInsertFixup(Node* z) {
                 }
 
                 // case 3: z is a left child
-                z->p->color = BLACK;
-                z->p->p->color = RED;
+                z->p = z->p->set_color(BLACK, this->nil, this->current_version);
+                z->p->p = z->p->p->set_color(RED, this->nil, this->current_version);
                 this->rightRotate(z->p->p);
                 
             }
@@ -345,18 +393,18 @@ void RBTree::rbInsertFixup(Node* z) {
             //cout << "Entrou no else" << endl;
             // same as "if" clause with "left" and "right" exchanged
             Node* y = z->p->p->get_left(this->current_version);
-            Node* a = z->p->p;
+            //Node* a = z->p->p;
             //cout << "a: " << a->key << " v" << a->version << endl;
             //cout << "y: " << y->key << " v" << y->version << endl;
 
             //cout << (y == NULL ? "NULL" : "NOT NULL") << endl;
 
-            if (y->color == RED) {
+            if (y->get_color(this->current_version) == RED) {
                 //cout << "chegou ate aqui - 2" << endl;
                 // case 1: z's uncle is red
-                z->p->color = BLACK;
-                y->color = BLACK;
-                z->p->p->color = RED;
+                z->p = z->p->set_color(BLACK, this->nil, this->current_version);
+                y = y->set_color(BLACK, this->nil, this->current_version);
+                z->p->p = z->p->p->set_color(RED, this->nil, this->current_version);
                 z = z->p->p;
                 //cout << "chegou ate aqui - 3" << endl;
             } else { 
@@ -370,14 +418,19 @@ void RBTree::rbInsertFixup(Node* z) {
                 }
 
                 // case 3: z is a left child
-                z->p->color = BLACK;
-                z->p->p->color = RED;
+                z->p = z->p->set_color(BLACK, this->nil, this->current_version);
+                z->p->p = z->p->p->set_color(RED, this->nil, this->current_version);
                 this->leftRotate(z->p->p);
             }
         }
+        if (this->root[this->current_version]->key == this->nil->p->key){
+            this->root[this->current_version] = this->nil->p;
+        } else {
+            this->nil->p = this->root[this->current_version];
+        }
         //this->print("", this->root[this->current_version], this->current_version, false, true);
     }
-    this->root[this->current_version]->color = BLACK;
+    this->root[this->current_version] = this->root[this->current_version]->set_color(BLACK, this->nil, this->current_version);
 }
 
 void RBTree::print(const string &prefix, Node* p, int v, bool isLeft, bool isRoot) {
@@ -388,7 +441,7 @@ void RBTree::print(const string &prefix, Node* p, int v, bool isLeft, bool isRoo
             cout << prefix << (isLeft ? "L├────" : "R└───");
         }
 
-        cout << p->key << (p->color == BLACK ? "(B) " : "(R) ") << p->version << endl;
+        cout << p->key << (p->get_color(v) == BLACK ? "(B) " : "(R) ") << p->version << endl;
 
         if (p->get_left(v) != this->nil) {
             this->print(prefix + (isLeft ? " │   " : "    "), p->get_left(v), v, true, false);
@@ -426,7 +479,7 @@ void RBTree::rbDelete(int k) {
 
     if (z != NULL) {
         Node* y = z;
-        unsigned short y_original_color = y->color;
+        unsigned short y_original_color = y->get_color(this->current_version);
         Node* x;
 
         Node* zl = z->get_left(this->current_version);
@@ -439,7 +492,7 @@ void RBTree::rbDelete(int k) {
             this->rbTransplant(z, zl);
         } else {
             y = this->treeMinimum(zr, this->current_version);
-            y_original_color = y->color;
+            y_original_color = y->get_color(this->current_version);
             
             x = y->get_right(this->current_version);
 
@@ -455,7 +508,7 @@ void RBTree::rbDelete(int k) {
             y = y->set_left(zl, this->nil, this->current_version);
             y->get_left(this->current_version)->p = y;
 
-            y->color = z->color;
+            y->color = z->get_color(this->current_version);
         }
 
         if (y_original_color == BLACK) {
@@ -475,11 +528,11 @@ void RBTree::rbDelete(int k) {
 }
 
 void RBTree::rbDeleteFixup(Node* x) {
-    while (x != this->root[this->current_version] && x->color == BLACK) {
+    while (x != this->root[this->current_version] && x->get_color(this->current_version) == BLACK) {
         if (x == x->p->get_left(this->current_version)) {
             Node* w = x->p->get_right(this->current_version);
 
-            if (w->color == RED) {
+            if (w->get_color(this->current_version) == RED) {
                 // case 1
                 w->color = BLACK;
                 x->p->color = RED;
@@ -487,12 +540,12 @@ void RBTree::rbDeleteFixup(Node* x) {
                 w = x->p->get_right(this->current_version); 
             }
 
-            if (w->get_left(this->current_version)->color == BLACK && w->get_right(this->current_version)->color == BLACK) {
+            if (w->get_left(this->current_version)->get_color(this->current_version) == BLACK && w->get_right(this->current_version)->get_color(this->current_version) == BLACK) {
                 // case 2
                 w->color = RED;
                 x = x->p;
             } else {
-                if (w->get_right(this->current_version)->color == BLACK) {
+                if (w->get_right(this->current_version)->get_color(this->current_version) == BLACK) {
                     // case 3
                     w->get_left(this->current_version)->color = BLACK;
                     w->color = RED;
@@ -501,7 +554,7 @@ void RBTree::rbDeleteFixup(Node* x) {
                 }
 
                 // case 4
-                w->color = x->p->color;
+                w->color = x->p->get_color(this->current_version);
                 x->p->color = BLACK;
                 w->get_right(this->current_version)->color = BLACK;
                 this->leftRotate(x->p);
@@ -510,7 +563,7 @@ void RBTree::rbDeleteFixup(Node* x) {
         } else {
             Node* w = x->p->get_left(this->current_version);
 
-            if (w->color == RED) {
+            if (w->get_color(this->current_version) == RED) {
                 // case 1
                 w->color = BLACK;
                 x->p->color = RED;
@@ -518,12 +571,12 @@ void RBTree::rbDeleteFixup(Node* x) {
                 w = x->p->get_left(this->current_version);
             }
 
-            if (w->get_right(this->current_version)->color == BLACK && w->get_left(this->current_version)->color == BLACK) {
+            if (w->get_right(this->current_version)->get_color(this->current_version) == BLACK && w->get_left(this->current_version)->get_color(this->current_version) == BLACK) {
                 // case 2
                 w->color = RED;
                 x = x->p;
             } else {
-                if (w->get_left(this->current_version)->color == BLACK) {
+                if (w->get_left(this->current_version)->get_color(this->current_version) == BLACK) {
                     // case 3
                     w->get_right(this->current_version)->color = BLACK;
                     w->color = RED;
@@ -532,7 +585,7 @@ void RBTree::rbDeleteFixup(Node* x) {
                 }
 
                 // case 4
-                w->color = x->p->color;
+                w->color = x->p->get_color(this->current_version);
                 x->p->color = BLACK;
                 w->get_left(this->current_version)->color = BLACK;
                 this->rightRotate(x->p);
@@ -655,6 +708,6 @@ int main() {
         rbtree.print("", rbtree.root[i], i, false, true);
         cout << endl;
     }
-   
+    
     return 0;
 }
