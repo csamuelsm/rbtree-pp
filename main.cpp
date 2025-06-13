@@ -173,17 +173,17 @@ Node* Node::duplicate(Node* nil, int v){
 
     cout << "Duplicating node with key " << this->key << " v" << this->version << endl;
 
-    /* cout << "Antes da duplicação" << endl;
+    cout << "Antes da duplicação" << endl;
     cout << "Pai do nó duplicado: " << this->p->key << " v" << this->p->version << endl;
     cout << "Filho esquerdo do nó duplicado: " << this->get_left(v)->key << " v" << this->get_left(v)->version << endl;
     cout << "Filho direito do nó duplicado: " << this->get_right(v)->key << " v" << this->get_right(v)->version << endl;
-    cout << "pai do Filho direito do nó duplicado: " << this->get_right(v)->p->key << " v" << this->get_right(v)->p->version << endl; */
+    cout << "pai do Filho direito do nó duplicado: " << this->get_right(v)->p->key << " v" << this->get_right(v)->p->version << endl;
 
     Node* ditto = new Node(this->key, v);
     ditto->left = this->get_left(v);
-    if (ditto->left != nil) ditto->get_left(v)->p = ditto;
+    if (ditto->left != nil && ditto->key == ditto->left->p->key) ditto->get_left(v)->p = ditto;
     ditto->right = this->get_right(v);
-    if (ditto->right != nil) ditto->get_right(v)->p = ditto;
+    if (ditto->right != nil && ditto->key == ditto->right->p->key) ditto->get_right(v)->p = ditto;
     ditto->color = this->get_color(v);
     ditto->p = this->p;
     if (ditto->p != nil){
@@ -193,15 +193,15 @@ Node* Node::duplicate(Node* nil, int v){
             ditto->p = ditto->p->set_right(ditto, nil, v);
         }
     } else { 
-        cout << "A raiz da árvore da versão " << this->version << " foi duplicada!" << endl;
+        cout << "A raiz da árvore da versão " << v << " foi duplicada!" << endl;
         nil->p = ditto;
     }
 
-    /* cout << "Depois da duplicação (nó com chave " << ditto->key << " v" << ditto->version << ")" << endl;
+    cout << "Depois da duplicação (nó com chave " << ditto->key << " v" << ditto->version << ")" << endl;
     cout << "Pai do nó duplicado: " << ditto->p->key << " v" << ditto->p->version << endl;
     cout << "Filho esquerdo do nó duplicado: " << ditto->get_left(v)->key << " v" << ditto->get_left(v)->version << endl;
     cout << "Filho direito do nó duplicado: " << ditto->get_right(v)->key << " v" << ditto->get_right(v)->version << endl;
-    cout << "pai do Filho direito do nó duplicado: " << ditto->get_right(v)->p->key << " v" << ditto->get_right(v)->p->version << endl; */
+    cout << "pai do Filho direito do nó duplicado: " << ditto->get_right(v)->p->key << " v" << ditto->get_right(v)->p->version << endl;
 
     return ditto;
 }
@@ -212,8 +212,8 @@ class RBTree {
         Node* nil;
         int current_version;
 
-        Node* leftRotate(Node* x);
-        Node* rightRotate(Node* y);
+        Node* leftRotate(Node* x, bool insert);
+        Node* rightRotate(Node* y, bool insert);
         int insert(int k); 
         void rbInsertFixup(Node* z);
         //Node* findNodeUncle(Node* z, unsigned short dir);
@@ -241,18 +241,30 @@ class RBTree {
         }
 };
 
-Node* RBTree::leftRotate(Node* x) {
+Node* RBTree::leftRotate(Node* x, bool insert) {
     // set y
+    cout << "entrei no left rotate" << endl;
     Node* y = x->get_right(this->current_version);
     Node* z = y->get_left(this->current_version);
-
+    cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
+    cout << "x->right: " << x->get_right(this->current_version)->key << " v" << x->get_right(this->current_version)->version << " (pai: " << x->get_right(this->current_version)->p->key << " v" << x->get_right(this->current_version)->p->version << ")" << endl;
+    cout << "y: " << y->key << " v" << y->version << " (pai: " << y->p->key << " v" << y->p->version << ")" << endl;
+    cout << "z: " << z->key << " v" << z->version << " (pai: " << z->p->key << " v" << z->p->version << ")" << endl;
     // turn y's left subtree into x's right subtree
-    x = x->set_right(z, this->nil, this->current_version);
     
+    //if (insert) 
+    y = y->set_left(this->nil, this->nil, this->current_version);
+    x = x->set_right(z, this->nil, this->current_version);
+    cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
+    cout << "x->right: " << x->get_right(this->current_version)->key << " v" << x->get_right(this->current_version)->version << " (pai: " << x->get_right(this->current_version)->p->key << " v" << x->get_right(this->current_version)->p->version << ")" << endl;
+    cout << "y: " << y->key << " v" << y->version << " (pai: " << y->p->key << " v" << y->p->version << ")" << endl;
+    cout << "z: " << z->key << " v" << z->version << " (pai: " << z->p->key << " v" << z->p->version << ")" << endl;
     if (z != this->nil) {
         z->p = x;
     }
-
+    cout << "z->p: " << z->p->key << " v" << z->p->version << endl;
+    cout << "x->right: " << x->get_right(this->current_version)->key << " v" << x->get_right(this->current_version)->version << " (pai: " << x->get_right(this->current_version)->p->key << " v" << x->get_right(this->current_version)->p->version << ")" << endl;
+    
     y->p = x->p; // link x's parent to y
 
     if (x->p == this->nil) {
@@ -263,19 +275,30 @@ Node* RBTree::leftRotate(Node* x) {
         x->p = x->p->set_right(y, this->nil, this->current_version);
     }
 
+    cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
+    cout << "x->right: " << x->get_right(this->current_version)->key << " v" << x->get_right(this->current_version)->version << " (pai: " << x->get_right(this->current_version)->p->key << " v" << x->get_right(this->current_version)->p->version << ")" << endl;
+    cout << "x->p->right: " << x->p->get_right(this->current_version)->key << " v" << x->p->get_right(this->current_version)->version << endl;
+    cout << "y: " << y->key << " v" << y->version << " (pai: " << y->p->key << " v" << y->p->version << ")" << endl;
+    cout << "z: " << z->key << " v" << z->version << " (pai: " << z->p->key << " v" << z->p->version << ")" << endl;
     y = y->set_left(x, this->nil, this->current_version);
     x->p = y;
+    //x = x->set_right(this->nil, this->nil, this->current_version);
+    cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
+    cout << "x->right: " << x->get_right(this->current_version)->key << " v" << x->get_right(this->current_version)->version << " (pai: " << x->get_right(this->current_version)->p->key << " v" << x->get_right(this->current_version)->p->version << ")" << endl;
+    cout << "y: " << y->key << " v" << y->version << " (pai: " << y->p->key << " v" << y->p->version << ")" << endl;
+    cout << "z: " << z->key << " v" << z->version << " (pai: " << z->p->key << " v" << z->p->version << ")" << endl;
     return x;
 }
 
-Node* RBTree::rightRotate(Node* y) {
+Node* RBTree::rightRotate(Node* y, bool insert) {
     // set x
     Node* x = y->get_left(this->current_version);
     Node* z = x->get_right(this->current_version);
 
     // turn x's right subtree into y's left subtree
+    x = x->set_right(this->nil, this->nil, this->current_version);
     y = y->set_left(z, this->nil, this->current_version);
-    
+    //if (insert) 
     if (z != this->nil) {
         z->p = y;
     }
@@ -299,7 +322,7 @@ Node* RBTree::rightRotate(Node* y) {
 int RBTree::insert(int k) {
     this->root[this->current_version+1] = this->root[this->current_version];
     this->current_version++;
-    cout << "Inserindo nó com chave " << k << " na versão " << this->current_version << endl;
+    //cout << "Inserindo nó com chave " << k << " na versão " << this->current_version << endl;
     Node* z = new Node(k, this->current_version);
     Node* y = this->nil;
     Node* x = this->root[this->current_version];
@@ -379,13 +402,13 @@ void RBTree::rbInsertFixup(Node* z) {
                     //cout << "Entrou no leftRotate" << endl;
                     // case 2: z is a right child
                     z = z->p;
-                    z = this->leftRotate(z);
+                    z = this->leftRotate(z, true);
                 }
 
                 // case 3: z is a left child
                 z->p = z->p->set_color(BLACK, this->nil, this->current_version);
                 z->p->p = z->p->p->set_color(RED, this->nil, this->current_version);
-                this->rightRotate(z->p->p);
+                this->rightRotate(z->p->p, true);
                 
             }
         
@@ -414,13 +437,13 @@ void RBTree::rbInsertFixup(Node* z) {
                     //cout << "Entrou no rightRotate" << endl;
                     // case 2: z is a right child
                     z = z->p;
-                    z = this->rightRotate(z);
+                    z = this->rightRotate(z, true);
                 }
 
                 // case 3: z is a left child
                 z->p = z->p->set_color(BLACK, this->nil, this->current_version);
                 z->p->p = z->p->p->set_color(RED, this->nil, this->current_version);
-                this->leftRotate(z->p->p);
+                this->leftRotate(z->p->p, true);
             }
         }
         if (this->root[this->current_version]->key == this->nil->p->key){
@@ -434,14 +457,14 @@ void RBTree::rbInsertFixup(Node* z) {
 }
 
 void RBTree::print(const string &prefix, Node* p, int v, bool isLeft, bool isRoot) {
-    if (p != this->nil) {
+    if (p->key != NULL) {
         if (isRoot) {
             cout << "─────";
         } else {
             cout << prefix << (isLeft ? "L├────" : "R└───");
         }
 
-        cout << p->key << (p->get_color(v) == BLACK ? "(B) " : "(R) ") << p->version << endl;
+        cout << p->key << (p->get_color(v) == BLACK ? "(B) " : "(R) ") << p->version << " (pai: " << p->p->key << " v" << p->p->version << ")" << endl;
 
         if (p->get_left(v) != this->nil) {
             this->print(prefix + (isLeft ? " │   " : "    "), p->get_left(v), v, true, false);
@@ -453,14 +476,22 @@ void RBTree::print(const string &prefix, Node* p, int v, bool isLeft, bool isRoo
 }
 
 void RBTree::rbTransplant(Node* u, Node* v) {
+    cout << "u: " << u->key << " v" << u->version << " (pai: " << u->p->key << " v" << u->p->version << ")" << endl;
+    cout << "v: " << v->key << " v" << v->version << " (pai: " << v->p->key << " v" << v->p->version << ")" << endl;
     if (u->p == this->nil) {
         this->root[this->current_version] = v;
+        this->nil->p = v;
     } else if (u == u->p->get_left(this->current_version)) {
         u->p = u->p->set_left(v, this->nil, this->current_version);
+        cout << "u->p->left: " << u->p->get_left(this->current_version)->key << " v" << u->p->get_left(this->current_version)->version << " (pai: " << u->p->get_left(this->current_version)->p->key << " v" << u->p->get_left(this->current_version)->p->version << ")" << endl;
     } else {
         u->p = u->p->set_right(v, this->nil, this->current_version);
+        cout << "u->p->right: " << u->p->get_right(this->current_version)->key << " v" << u->p->get_right(this->current_version)->version << " (pai: " << u->p->get_right(this->current_version)->p->key << " v" << u->p->get_right(this->current_version)->p->version << ")" << endl;
     }
+    //if (v != this->nil) 
     v->p = u->p;
+    cout << "u: " << u->key << " v" << u->version << " (pai: " << u->p->key << " v" << u->p->version << ")" << endl;
+    cout << "v: " << v->key << " v" << v->version << " (pai: " << v->p->key << " v" << v->p->version << ")" << endl;
 } 
 
 Node* RBTree::treeMinimum(Node* z, int v) {
@@ -475,125 +506,232 @@ Node* RBTree::treeMinimum(Node* z, int v) {
 void RBTree::rbDelete(int k) {
     this->root[this->current_version+1] = this->root[this->current_version];
     this->current_version++;
+    cout << endl;
+    cout << "Removendo nó com chave " << k << " na versão " << this->current_version << endl;
     Node* z = this->find(k, this->current_version);
-
     if (z != NULL) {
         Node* y = z;
         unsigned short y_original_color = y->get_color(this->current_version);
-        Node* x;
 
+        Node* x;
+        cout << "z: " << z->key << " v" << z->version << " (pai: " << z->p->key << " v" << z->p->version << ")" << endl;
+        cout << "y: " << y->key << " v" << y->version << " (pai: " << y->p->key << " v" << y->p->version << ")" << endl;
+        //cout << "y->p: " << y->p->key << " v" << y->p->version << endl;
+        //cout << "y original color: " << y->get_color(this->current_version) << endl;
         Node* zl = z->get_left(this->current_version);
         Node* zr = z->get_right(this->current_version);
+        cout << "zl: " << zl->key << " v" << zl->version << " (pai: " << zl->p->key << " v" << zl->p->version << ")" << endl;
+        cout << "zr: " << zr->key << " v" << zr->version << " (pai: " << zr->p->key << " v" << zr->p->version << ")" << endl;
+        //cout << "zr->p: " << zr->p->key << " v" << zr->p->version << endl;
         if (zl == this->nil) {
+            cout << "entrei no zl" << endl;
             x = zr;
-            this->rbTransplant(z, zr);
+            if (x == this->nil) {
+                x = new Node(NULL, this->current_version);
+                x->color = BLACK;
+                x->left = this->nil;
+                x->right = this->nil;
+                x->p = z;
+            }
+            cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
+            this->rbTransplant(z, x);
         } else if (zr == this->nil) {
+            cout << "entrei no zr" << endl;
             x = zl;
-            this->rbTransplant(z, zl);
+            cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
+            if (x == this->nil) {
+                x = new Node(NULL, this->current_version);
+                x->color = BLACK;
+                x->left = this->nil;
+                x->right = this->nil;
+                x->p = z;
+            }
+            this->rbTransplant(z, x);
         } else {
             y = this->treeMinimum(zr, this->current_version);
             y_original_color = y->get_color(this->current_version);
-            
-            x = y->get_right(this->current_version);
+            cout << "z: " << z->key << " v" << z->version << " (pai: " << z->p->key << " v" << z->p->version << ")" << endl;
+            cout << "y: " << y->key << " v" << y->version << " (pai: " << y->p->key << " v" << y->p->version << ")" << endl;
+            //cout << "y->p: " << y->p->key << " v" << y->p->version << endl;
+            //cout << "z->right->p: " << z->get_right(this->current_version)->p->key << " v" << z->get_right(this->current_version)->p->version << endl;
+            //cout << "y original color: " << y->get_color(this->current_version) << endl;
 
-            if (y->p == z) {
+            x = y->get_right(this->current_version);
+            
+            if (x == this->nil) {
+                x = new Node(NULL, this->current_version);
+                x->color = BLACK;
+                x->left = this->nil;
+                x->right = this->nil;
                 x->p = y;
+                y = y->set_right(x, this->nil, this->current_version);
+            }
+            
+            cout << "z: " << z->key << " v" << z->version << " (pai: " << z->p->key << " v" << z->p->version << ")" << endl;
+            cout << "y: " << y->key << " v" << y->version << " (pai: " << y->p->key << " v" << y->p->version << ")" << endl;
+            cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
+            //cout << "y->p: " << y->p->key << " v" << y->p->version << endl;
+            if (y->p == z) {
+                cout << "entrei no if" << endl;
+                if (x != this->nil) x->p = y;
             } else {
-                this->rbTransplant(y, y->get_right(this->current_version));
+                cout << "entrei no else" << endl;
+                this->rbTransplant(y, x);
+                cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
                 y = y->set_right(zr, this->nil, this->current_version);
+                cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
                 y->get_right(this->current_version)->p = y;
+                cout << "y->right: " << y->get_right(this->current_version)->key << " v" << y->get_right(this->current_version)->version << " (pai: " << y->get_right(this->current_version)->p->key << " v" << y->get_right(this->current_version)->p->version << ")" << endl;
             }
 
+            cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
             this->rbTransplant(z, y);
             y = y->set_left(zl, this->nil, this->current_version);
+            cout << "y: " << y->key << " v" << y->version << " (pai: " << y->p->key << " v" << y->p->version << ")" << endl;
+            cout << "yl: " << y->get_left(this->current_version)->key << " v" << y->get_left(this->current_version)->version << endl;
+            cout << "yl->p: " << y->get_left(this->current_version)->p->key << " v" << y->get_left(this->current_version)->p->version << endl;
             y->get_left(this->current_version)->p = y;
+            cout << "yl: " << y->get_left(this->current_version)->key << " v" << y->get_left(this->current_version)->version << endl;
+            cout << "yl->p: " << y->get_left(this->current_version)->p->key << " v" << y->get_left(this->current_version)->p->version << endl;
+            y = y->set_color(z->get_color(this->current_version), this->nil, this->current_version);
+            cout << "y: " << y->key << " v" << y->version << " (pai: " << y->p->key << " v" << y->p->version << ")" << endl;
+            cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
 
-            y->color = z->get_color(this->current_version);
         }
-
+        
+        cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
+        if (x == this->nil) {
+            Node* w = x->p;
+            x = new Node(NULL, this->current_version);
+            x->color = BLACK;
+            x->left = this->nil;
+            x->right = this->nil;
+            cout << "w: " << w->key << " v" << w->version << " (pai: " << w->p->key << " v" << w->p->version << ")" << endl;
+            cout << "wl: " << w->get_left(this->current_version)->key << " v" << w->get_left(this->current_version)->version << endl;
+            cout << "wr: " << w->get_right(this->current_version)->key << " v" << w->get_right(this->current_version)->version << endl;
+            x->p = w;
+            if (w->get_left(this->current_version) == this->nil) {
+                w = w->set_left(x, this->nil, this->current_version);
+            } else {
+                w = w->set_right(x, this->nil, this->current_version);
+            }
+            cout << "w: " << w->key << " v" << w->version << " (pai: " << w->p->key << " v" << w->p->version << ")" << endl;
+            cout << "wl: " << w->get_left(this->current_version)->key << " v" << w->get_left(this->current_version)->version << endl;
+            cout << "wr: " << w->get_right(this->current_version)->key << " v" << w->get_right(this->current_version)->version << endl;
+            if (this->root[this->current_version]->key == this->nil->p->key){
+                this->root[this->current_version] = this->nil->p;
+            } else {
+                this->nil->p = this->root[this->current_version];
+            }
+            cout << "nil: " << this->nil->key << " v" << this->nil->version << " (pai: " << this->nil->p->key << " v" << this->nil->p->version << ")" << endl;
+        }
+        //this->print("", this->root[this->current_version], this->current_version, false, true);
+        cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
         if (y_original_color == BLACK) {
             this->rbDeleteFixup(x);
         }
-    }
 
-    if (this->root[this->current_version]->key == this->nil->p->key){
-        this->root[this->current_version] = this->nil->p;
-    } else {
-        this->nil->p = this->root[this->current_version];
+        if (this->root[this->current_version]->key == this->nil->p->key){
+            this->root[this->current_version] = this->nil->p;
+        } else {
+            this->nil->p = this->root[this->current_version];
+        }
     }
     
-    cout << "Versão " << this->current_version << " da árvore" << endl;
+    /* cout << "Versão " << this->current_version << " da árvore" << endl;
     this->print("", this->root[this->current_version], this->current_version, false, true);
-    cout << endl;
+    cout << endl; */
 }
 
 void RBTree::rbDeleteFixup(Node* x) {
     while (x != this->root[this->current_version] && x->get_color(this->current_version) == BLACK) {
         if (x == x->p->get_left(this->current_version)) {
             Node* w = x->p->get_right(this->current_version);
-
+            cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
+            cout << "w: " << w->key << " v" << w->version << " (pai: " << w->p->key << " v" << w->p->version << ")" << endl;
             if (w->get_color(this->current_version) == RED) {
                 // case 1
-                w->color = BLACK;
-                x->p->color = RED;
-                this->leftRotate(x->p);
+                cout << "irmão é vermelho" << endl;
+                w = w->set_color(BLACK, this->nil, this->current_version);
+                x->p = x->p->set_color(RED, this->nil, this->current_version);
+                //this->print("", this->root[this->current_version], this->current_version, false, true);
+                this->leftRotate(x->p, false);
                 w = x->p->get_right(this->current_version); 
+                //this->print("", this->root[this->current_version], this->current_version, false, true);
             }
 
             if (w->get_left(this->current_version)->get_color(this->current_version) == BLACK && w->get_right(this->current_version)->get_color(this->current_version) == BLACK) {
                 // case 2
-                w->color = RED;
+                cout << "sobrinhos são pretos" << endl;
+                w = w->set_color(RED, this->nil, this->current_version);
+                if (x->key == NULL) x->p = x->p->set_left(this->nil, this->nil, this->current_version);
                 x = x->p;
             } else {
                 if (w->get_right(this->current_version)->get_color(this->current_version) == BLACK) {
                     // case 3
-                    w->get_left(this->current_version)->color = BLACK;
-                    w->color = RED;
-                    this->rightRotate(w);
+                    cout << "sobrinho direito é preto" << endl;
+                    w = w->set_left(w->get_left(this->current_version)->set_color(BLACK, this->nil, this->current_version), this->nil, this->current_version);
+                    w = w->set_color(RED, this->nil, this->current_version);
+                    this->rightRotate(w, false);
                     w = x->p->get_right(this->current_version);
                 }
 
                 // case 4
-                w->color = x->p->get_color(this->current_version);
-                x->p->color = BLACK;
-                w->get_right(this->current_version)->color = BLACK;
-                this->leftRotate(x->p);
+                w = w->set_color(x->p->get_color(this->current_version), this->nil, this->current_version);
+                x->p = x->p->set_color(BLACK, this->nil, this->current_version);
+                w = w->set_right(w->get_right(this->current_version)->set_color(BLACK, this->nil, this->current_version), this->nil, this->current_version);
+                this->leftRotate(x->p, false);
+                if (x->key == NULL) x->p = x->p->set_left(this->nil, this->nil, this->current_version);
                 x = this->root[this->current_version];
             }
         } else {
             Node* w = x->p->get_left(this->current_version);
-
+            cout << "x: " << x->key << " v" << x->version << " (pai: " << x->p->key << " v" << x->p->version << ")" << endl;
+            cout << "w: " << w->key << " v" << w->version << " (pai: " << w->p->key << " v" << w->p->version << ")" << endl;
             if (w->get_color(this->current_version) == RED) {
                 // case 1
-                w->color = BLACK;
-                x->p->color = RED;
-                this->rightRotate(x->p);
+                cout << "irmão é vermelho" << endl;
+                w = w->set_color(BLACK, this->nil, this->current_version);
+                x->p = x->p->set_color(RED, this->nil, this->current_version);
+                this->rightRotate(x->p, false);
                 w = x->p->get_left(this->current_version);
             }
 
             if (w->get_right(this->current_version)->get_color(this->current_version) == BLACK && w->get_left(this->current_version)->get_color(this->current_version) == BLACK) {
                 // case 2
-                w->color = RED;
+                cout << "sobrinhos são pretos" << endl;
+                w = w->set_color(RED, this->nil, this->current_version);
+                if (x->key == NULL) x->p = x->p->set_right(this->nil, this->nil, this->current_version);
                 x = x->p;
             } else {
                 if (w->get_left(this->current_version)->get_color(this->current_version) == BLACK) {
                     // case 3
-                    w->get_right(this->current_version)->color = BLACK;
-                    w->color = RED;
-                    this->leftRotate(w);
+                    cout << "sobrinho esquerdo é preto" << endl;
+                    w = w->set_right(w->get_right(this->current_version)->set_color(BLACK, this->nil, this->current_version), this->nil, this->current_version);
+                    w = w->set_color(RED, this->nil, this->current_version);
+                    this->leftRotate(w, false);
                     w = x->p->get_left(this->current_version);
                 }
 
                 // case 4
-                w->color = x->p->get_color(this->current_version);
-                x->p->color = BLACK;
-                w->get_left(this->current_version)->color = BLACK;
-                this->rightRotate(x->p);
+                w = w->set_color(x->p->get_color(this->current_version), this->nil, this->current_version);
+                x->p = x->p->set_color(BLACK, this->nil, this->current_version);
+                w = w->set_left(w->get_left(this->current_version)->set_color(BLACK, this->nil, this->current_version), this->nil, this->current_version);
+                this->rightRotate(x->p, false);
+                if (x->key == NULL) x->p = x->p->set_right(this->nil, this->nil, this->current_version);
                 x = this->root[this->current_version];
             }
         }
+        if (this->root[this->current_version]->key == this->nil->p->key){
+            this->root[this->current_version] = this->nil->p;
+        } else {
+            this->nil->p = this->root[this->current_version];
+        }
+        /* cout << "Versão " << this->current_version << " da árvore" << endl;
+        this->print("", this->root[this->current_version], this->current_version, false, true);
+        cout << endl; */
     }
-    x->color = BLACK;
+    x = x->set_color(BLACK, this->nil, this->current_version);
 }
 
 Node* RBTree::find(int k, int v) {
@@ -673,7 +811,6 @@ int main() {
     rbtree.insert(4);
     rbtree.insert(19);
 
-
     /* rbtree.insert(1);
     rbtree.insert(2);
     rbtree.insert(3);
@@ -683,10 +820,22 @@ int main() {
     rbtree.insert(7);
     rbtree.insert(8);
     rbtree.insert(9);
-    rbtree.insert(10); */
+    rbtree.insert(10);
+ */
+    cout << "Versão " << 10 << " da árvore" << endl;
+    rbtree.print("", rbtree.root[10], 10, false, true);
+    cout << endl;
 
+    //rbtree.rbDelete(1);
+    //rbtree.rbDelete(2);
+    //rbtree.rbDelete(3);
     //rbtree.rbDelete(4);
-    //rbtree.rbDelete(8);
+    //rbtree.rbDelete(5);
+    //rbtree.rbDelete(6);
+    //rbtree.rbDelete(7);
+    rbtree.rbDelete(8);
+    //rbtree.rbDelete(9);
+    //rbtree.rbDelete(10);
 
     //rbtree.gerarChaves(20);
 
@@ -702,7 +851,7 @@ int main() {
     //cout << "Sucessor de 1: " << h->key << endl;
 
     
-    for (int i = 0; i <= rbtree.current_version; i++)
+    for (int i = 10; i <= rbtree.current_version; i++)
     {
         cout << "Versão " << i << " da árvore" << endl;
         rbtree.print("", rbtree.root[i], i, false, true);
