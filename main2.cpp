@@ -322,9 +322,11 @@ void RBTree::rbTransplant(Node* u, Node* v) {
     } else if (u == u->p->get_left(this->version)) {
         //u->p->left = v;
         u->p->set_left(v, this->version);
+        cout << "u->p->left: " << v->key << " v" << this->version << endl;
     } else {
         //u->p->right = v;
         u->p->set_right(v, this->version);
+        cout << "u->p->right: " << v->key << " v" << this->version << endl;
     }
     v->p = u->p;
     cout << "u: " << u->key << " v" << u->version << " (pai: " << u->p->key << " v" << u->p->version << ")" << endl;
@@ -574,7 +576,7 @@ int main() {
 
     cout << "Tudo certo!" << endl;
 
-    rbtree.insert(1);
+    /* rbtree.insert(1);
     rbtree.insert(17);
     rbtree.insert(6);
     rbtree.insert(7);
@@ -593,9 +595,9 @@ int main() {
     rbtree.insert(15);
     rbtree.insert(16);
     rbtree.insert(4);
-    rbtree.insert(19);
+    rbtree.insert(19); */
 
-    /* rbtree.insert(1);
+    rbtree.insert(1);
     rbtree.insert(2);
     rbtree.insert(3);
     rbtree.insert(4);
@@ -604,7 +606,7 @@ int main() {
     rbtree.insert(7);
     rbtree.insert(8);
     rbtree.insert(9);
-    rbtree.insert(10); */
+    rbtree.insert(10);
 
     //rbtree.gerarChaves(20);
 
@@ -618,15 +620,15 @@ int main() {
     //rbtree.rbDelete(5);
     //rbtree.rbDelete(6);
     //rbtree.rbDelete(7);
-    rbtree.rbDelete(8);
+    //rbtree.rbDelete(8);
     //rbtree.rbDelete(9);
-    //rbtree.rbDelete(10);
+    rbtree.rbDelete(10);
 
-    Node* g = rbtree.successor(6, rbtree.version);
+    /* Node* g = rbtree.successor(6, rbtree.version);
     cout << "Sucessor de 6: " << g->key << endl;
 
     Node* h = rbtree.successor(1, rbtree.version);
-    cout << "Sucessor de 1: " << h->key << endl;
+    cout << "Sucessor de 1: " << h->key << endl; */
 
     rbtree.print("", rbtree.root[1], 1, false, true);
     cout << endl;
