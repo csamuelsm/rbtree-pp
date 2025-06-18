@@ -4,6 +4,8 @@
 #include <set>
 #include <random>
 #include <ctime>
+#include <fstream> 
+#include <string>
 using namespace std;
 
 #define RED 0
@@ -225,6 +227,7 @@ class RBTree {
         void rbInsertFixup(Node* z);
         //Node* findNodeUncle(Node* z, unsigned short dir);
         void print(const string &prefix, Node *p, int v, bool isLeft, bool isRoot);
+        void printEntrega(Node* p, int v, int d);
         void rbTransplant(Node* u, Node* v); 
         void rbDelete(int k);
         void rbDeleteFixup(Node* x);
@@ -464,7 +467,7 @@ void RBTree::rbInsertFixup(Node* z) {
 }
 
 void RBTree::print(const string &prefix, Node* p, int v, bool isLeft, bool isRoot) {
-    if (p->key != NULL) {
+    if (p != this->nil) {
         if (isRoot) {
             cout << "─────";
         } else {
@@ -478,6 +481,20 @@ void RBTree::print(const string &prefix, Node* p, int v, bool isLeft, bool isRoo
         }
         if (p->get_right(v) != this->nil) {
             this->print(prefix + (isLeft ? " │   " : "    "), p->get_right(v), v, false, false);
+        }
+    }
+}
+
+void RBTree::printEntrega(Node* p, int v, int d) {
+    if (p != this->nil) {
+        if (p->get_left(v) != this->nil) {
+            this->printEntrega(p->get_left(v), v, d+1);
+        }
+
+        cout << p->key << "," << d << "," << (p->get_color(v) == BLACK ? "N " : "R ");
+
+        if (p->get_right(v) != this->nil) {
+            this->printEntrega(p->get_right(v), v, d+1);
         }
     }
 }
@@ -770,78 +787,58 @@ void RBTree::gerarChaves(int valores){
     }
 }
 
-int main() {
+int main(int argc, char** argv) {
+
+    if (argc <= 0) {
+        cout << "Nenhum argumento passado. Por favor tente novamente passe o arquivo de txt como entrada." << endl;
+        return 1;
+    }
+
+    std::string filename = argv[1];
+    std::string line;
+
+    ifstream MyFile(filename);
+    if (!MyFile.is_open()) {
+        cout << "Não foi possivel abrir o arquivo indicado." << endl;
+        return 1;
+    }
+
     RBTree rbtree = RBTree();
 
-    cout << "Tudo certo!" << endl;
+    while (getline(MyFile, line)) {
+        std::stringstream ss(line);
+        std::string command;
+        int n;
+        int v;
 
-    /* rbtree.insert(1);
-    rbtree.insert(17);
-    rbtree.insert(6);
-    rbtree.insert(7);
-    rbtree.insert(8);
-    rbtree.insert(14);
-    rbtree.insert(13);
-    rbtree.insert(9);
-    rbtree.insert(10);
-    rbtree.insert(18);
-    rbtree.insert(11);
-    rbtree.insert(2);
-    rbtree.insert(12);
-    rbtree.insert(3);
-    rbtree.insert(5);
-    rbtree.insert(20);
-    rbtree.insert(15);
-    rbtree.insert(16);
-    rbtree.insert(4);
-    rbtree.insert(19); */
-
-    rbtree.insert(1);
-    rbtree.insert(2);
-    rbtree.insert(3);
-    rbtree.insert(4);
-    rbtree.insert(5);
-    rbtree.insert(6);
-    rbtree.insert(7);
-    rbtree.insert(8);
-    rbtree.insert(9);
-    rbtree.insert(10);
-
-    cout << "Versão " << 10 << " da árvore" << endl;
-    rbtree.print("", rbtree.root[10], 10, false, true);
-    cout << endl;
-
-    //rbtree.rbDelete(1);
-    //rbtree.rbDelete(2);
-    //rbtree.rbDelete(3);
-    //rbtree.rbDelete(4);
-    //rbtree.rbDelete(5);
-    //rbtree.rbDelete(6);
-    //rbtree.rbDelete(7);
-    //rbtree.rbDelete(8);
-    //rbtree.rbDelete(9);
-    rbtree.rbDelete(10);
-
-    //rbtree.gerarChaves(20);
-
-    //rbtree.print("", rbtree.root[rbtree.current_version], false, true);
-    //cout << endl;
-    
-    //rbtree.rbDelete(4);
-
-    //Node* g = rbtree.successor(6, rbtree.current_version);
-    //cout << "Sucessor de 6: " << g->key << endl;
-
-    //Node* h = rbtree.successor(1, rbtree.current_version);
-    //cout << "Sucessor de 1: " << h->key << endl;
-
-    
-    for (int i = 10; i <= rbtree.current_version; i++)
-    {
-        cout << "Versão " << i << " da árvore" << endl;
-        rbtree.print("", rbtree.root[i], i, false, true);
-        cout << endl;
+        if (ss >> command >> n) {
+            if (command == "INC") {
+                // INSERIR
+                cout << "inserir " << n << endl;
+                rbtree.insert(n);
+            } else if (command == "REM") {
+                // REMOVER
+                cout << "remover " << n << endl;
+                rbtree.rbDelete(n);
+            } else if (command == "SUC") {
+                // SUCESSOR
+                if (ss >> v) {
+                    cout << "sucessor " << n << " " << v << endl;
+                }
+            } else if (command == "IMP") {
+                // IMPRIMIR
+                //cout << "imprimir " << n << endl;
+                int k = n;
+                if (n > rbtree.current_version) {
+                    k = rbtree.current_version;
+                }
+                rbtree.printEntrega(rbtree.root[k], k, 0);
+                cout << endl;
+            }
+        }
     }
+
+    MyFile.close();
     
     return 0;
 }

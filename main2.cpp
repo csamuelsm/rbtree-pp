@@ -616,13 +616,13 @@ int main() {
     //rbtree.rbDelete(1);
     //rbtree.rbDelete(2);
     //rbtree.rbDelete(3);
-    //rbtree.rbDelete(4);
+    rbtree.rbDelete(4);
     //rbtree.rbDelete(5);
     //rbtree.rbDelete(6);
     //rbtree.rbDelete(7);
-    //rbtree.rbDelete(8);
+    rbtree.rbDelete(8);
     //rbtree.rbDelete(9);
-    rbtree.rbDelete(10);
+    //rbtree.rbDelete(10);
 
     /* Node* g = rbtree.successor(6, rbtree.version);
     cout << "Sucessor de 6: " << g->key << endl;
