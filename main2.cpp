@@ -624,10 +624,10 @@ int main() {
     //rbtree.rbDelete(9);
     //rbtree.rbDelete(10);
 
-    /* Node* g = rbtree.successor(6, rbtree.version);
-    cout << "Sucessor de 6: " << g->key << endl;
+    Node* g = rbtree.successor(10, rbtree.version);
+    cout << "Sucessor de 10: " << g->key << endl;
 
-    Node* h = rbtree.successor(1, rbtree.version);
+    /*Node* h = rbtree.successor(1, rbtree.version);
     cout << "Sucessor de 1: " << h->key << endl; */
 
     rbtree.print("", rbtree.root[1], 1, false, true);

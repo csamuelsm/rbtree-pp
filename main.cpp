@@ -759,15 +759,20 @@ Node* RBTree::find(int k, int v) {
 
 Node* RBTree::successor(int k, int v) {
     Node* x = this->find(k, v);
-
-    if (x->right != this->nil) {
-        return this->treeMinimum(x->right, v);
+    //cout << "x: " << x->key << " v" << x->version << " (pai " << x->p->key << " v" << x->p->version << ")" << endl;
+ 
+    if (x->get_right(v) != this->nil) {
+        return this->treeMinimum(x->get_right(v), v);
     }
 
     Node* y = x->p;
-    while (y != this->nil && x == y->right) {
+    //cout << "y: " << y->key << " v" << y->version << " (pai " << y->p->key << " v" << y->p->version << ")" << endl;
+    while (y != this->nil && x == y->get_right(v)) {
+        cout << endl;
         x = y;
+        //cout << "x: " << x->key << " v" << x->version << " (pai " << x->p->key << " v" << x->p->version << ")" << endl;
         y = y->p;
+        //cout << "y: " << y->key << " v" << y->version << " (pai " << y->p->key << " v" << y->p->version << ")" << endl;
     }
     return y;
 }
@@ -814,25 +819,35 @@ int main(int argc, char** argv) {
         if (ss >> command >> n) {
             if (command == "INC") {
                 // INSERIR
-                cout << "inserir " << n << endl;
+                cout << line << endl;
+                //cout << "inserir " << n << endl;
                 rbtree.insert(n);
             } else if (command == "REM") {
                 // REMOVER
-                cout << "remover " << n << endl;
+                cout << line << endl;
+                //cout << "remover " << n << endl;
                 rbtree.rbDelete(n);
             } else if (command == "SUC") {
                 // SUCESSOR
+                cout << line << endl;
                 if (ss >> v) {
-                    cout << "sucessor " << n << " " << v << endl;
+                    int k = v;
+                    if (v > rbtree.current_version) {
+                        k = rbtree.current_version;
+                    }
+                    //cout << "sucessor " << n << " " << v << endl;
+                    cout << rbtree.successor(n, k)->key << endl;
                 }
             } else if (command == "IMP") {
                 // IMPRIMIR
                 //cout << "imprimir " << n << endl;
+                cout << line << endl;
                 int k = n;
                 if (n > rbtree.current_version) {
                     k = rbtree.current_version;
                 }
                 rbtree.printEntrega(rbtree.root[k], k, 0);
+                //rbtree.print("", rbtree.root[k], k, false, true);
                 cout << endl;
             }
         }
