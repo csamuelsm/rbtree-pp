@@ -6,3 +6,11 @@ main2
 main2.cpp
 main3.cpp
 main4.cpp
+./a.out
+./a.exe
+./*.exe
+./main
+./main2
+./main2.cpp
+./main3.cpp
+./main4.cpp

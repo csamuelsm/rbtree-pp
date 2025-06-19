@@ -227,7 +227,7 @@ class RBTree {
         void rbInsertFixup(Node* z);
         //Node* findNodeUncle(Node* z, unsigned short dir);
         void print(const string &prefix, Node *p, int v, bool isLeft, bool isRoot);
-        void printEntrega(Node* p, int v, int d);
+        void printEntrega(Node* p, int v, int d, std::ofstream& Output);
         void rbTransplant(Node* u, Node* v); 
         void rbDelete(int k);
         void rbDeleteFixup(Node* x);
@@ -485,16 +485,17 @@ void RBTree::print(const string &prefix, Node* p, int v, bool isLeft, bool isRoo
     }
 }
 
-void RBTree::printEntrega(Node* p, int v, int d) {
+void RBTree::printEntrega(Node* p, int v, int d, std::ofstream& Output) {
     if (p != this->nil) {
         if (p->get_left(v) != this->nil) {
-            this->printEntrega(p->get_left(v), v, d+1);
+            this->printEntrega(p->get_left(v), v, d+1, Output);
         }
-
+        
+        Output << p->key << "," << d << "," << (p->get_color(v) == BLACK ? "N " : "R ");
         cout << p->key << "," << d << "," << (p->get_color(v) == BLACK ? "N " : "R ");
 
         if (p->get_right(v) != this->nil) {
-            this->printEntrega(p->get_right(v), v, d+1);
+            this->printEntrega(p->get_right(v), v, d+1, Output);
         }
     }
 }
@@ -765,8 +766,9 @@ Node* RBTree::successor(int k, int v) {
 
     Node* y = this->root[v];
     std::vector<std::pair<Node*, unsigned short>> ancestors;
+    ancestors.push_back(std::pair<Node*, unsigned short> (this->nil, LEFT));
 
-    while (y != this->nil) {
+    while (y->key != NULL || y != this->nil) {
         //cout << "chave y " << y->key << endl;
         if (y->key == k) {
             break;
@@ -779,15 +781,23 @@ Node* RBTree::successor(int k, int v) {
         }
     }
     //cout << "saiu do while" << endl;
-    if (y!=this->nil) {
+    if (y->get_right(v)->key!=NULL || y->get_right(v) != this->nil) {
+        //cout << "entrou no y->right != NULL" << endl;
         return this->treeMinimum(y->get_right(v), v);
     }
 
     std::pair<Node*, unsigned short> z = ancestors.back();
-    while (z.first != this->nil && z.second == RIGHT && ancestors.size() >= 0) {
-        ancestors.pop_back();
+    ancestors.pop_back();
+    while (z.first != this->nil && z.second == RIGHT && ancestors.size() > 0) {
+        //cout << "iterou no while" << endl;
+        //cout << "z: " << z.first->key << ", " << (z.second == RIGHT ? "R" : "L") << endl;
+        //cout << "ancestors " << ancestors.size() << endl; 
         z = ancestors.back();
+        ancestors.pop_back();
     }
+
+    //Output << "SUC " << k << " " << v << endl;
+    //Output << z.first->key << endl;
 
     return z.first;
 }
@@ -817,6 +827,8 @@ int main(int argc, char** argv) {
     std::string filename = argv[1];
     std::string line;
 
+    ofstream Output("saida.txt");
+
     ifstream MyFile(filename);
     if (!MyFile.is_open()) {
         cout << "Não foi possivel abrir o arquivo indicado." << endl;
@@ -844,6 +856,7 @@ int main(int argc, char** argv) {
                 rbtree.rbDelete(n);
             } else if (command == "SUC") {
                 // SUCESSOR
+                Output << line << endl;
                 cout << line << endl;
                 if (ss >> v) {
                     int k = v;
@@ -851,24 +864,28 @@ int main(int argc, char** argv) {
                         k = rbtree.current_version;
                     }
                     //cout << "sucessor " << n << " " << v << endl;
-                    cout << rbtree.successor(n, k)->key << endl;
+                    //cout << rbtree.successor(n, k, Output)->key << endl;
+                    Output << rbtree.successor(n, k)->key << endl;
                 }
             } else if (command == "IMP") {
                 // IMPRIMIR
                 //cout << "imprimir " << n << endl;
+                Output << line << endl;
                 cout << line << endl;
                 int k = n;
                 if (n > rbtree.current_version) {
                     k = rbtree.current_version;
                 }
-                rbtree.printEntrega(rbtree.root[k], k, 0);
+                rbtree.printEntrega(rbtree.root[k], k, 0, Output);
                 //rbtree.print("", rbtree.root[k], k, false, true);
+                Output << endl;
                 cout << endl;
             }
         }
     }
 
     MyFile.close();
+    Output.close();
     
     return 0;
 }
