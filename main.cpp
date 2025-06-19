@@ -758,23 +758,38 @@ Node* RBTree::find(int k, int v) {
 }
 
 Node* RBTree::successor(int k, int v) {
-    Node* x = this->find(k, v);
-    //cout << "x: " << x->key << " v" << x->version << " (pai " << x->p->key << " v" << x->p->version << ")" << endl;
- 
-    if (x->get_right(v) != this->nil) {
-        return this->treeMinimum(x->get_right(v), v);
+
+    if (v > this->current_version) {
+        v = this->current_version;
     }
 
-    Node* y = x->p;
-    //cout << "y: " << y->key << " v" << y->version << " (pai " << y->p->key << " v" << y->p->version << ")" << endl;
-    while (y != this->nil && x == y->get_right(v)) {
-        cout << endl;
-        x = y;
-        //cout << "x: " << x->key << " v" << x->version << " (pai " << x->p->key << " v" << x->p->version << ")" << endl;
-        y = y->p;
-        //cout << "y: " << y->key << " v" << y->version << " (pai " << y->p->key << " v" << y->p->version << ")" << endl;
+    Node* y = this->root[v];
+    std::vector<std::pair<Node*, unsigned short>> ancestors;
+
+    while (y != this->nil) {
+        //cout << "chave y " << y->key << endl;
+        if (y->key == k) {
+            break;
+        } else if (k < y->key) {
+            ancestors.push_back(std::pair<Node*, unsigned short> (y, LEFT));
+            y = y->get_left(v);
+        } else {
+            ancestors.push_back(std::pair<Node*, unsigned short> (y, RIGHT));
+            y = y->get_right(v);        
+        }
     }
-    return y;
+    //cout << "saiu do while" << endl;
+    if (y!=this->nil) {
+        return this->treeMinimum(y->get_right(v), v);
+    }
+
+    std::pair<Node*, unsigned short> z = ancestors.back();
+    while (z.first != this->nil && z.second == RIGHT && ancestors.size() >= 0) {
+        ancestors.pop_back();
+        z = ancestors.back();
+    }
+
+    return z.first;
 }
 
 void RBTree::gerarChaves(int valores){
