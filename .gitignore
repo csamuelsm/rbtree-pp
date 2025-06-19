@@ -6,6 +6,7 @@ main2
 main2.cpp
 main3.cpp
 main4.cpp
+saida.txt
 ./a.out
 ./a.exe
 ./*.exe
@@ -14,3 +15,4 @@ main4.cpp
 ./main2.cpp
 ./main3.cpp
 ./main4.cpp
+./saida.txt
